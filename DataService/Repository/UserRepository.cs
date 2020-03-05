@@ -22,7 +22,8 @@ namespace DataService.Repository
 
         public User GetUserByUsername(string username)
         {
-            var user = this.Get(acc => string.Equals(acc.Username, username), null, "UserRole.Role").FirstOrDefault();
+            var user = this.Get(filter: acc => string.Equals(acc.Username, username), 
+                orderBy: null, "UserRole.Role").FirstOrDefault();
             return user;
         }
 

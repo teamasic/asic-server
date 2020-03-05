@@ -19,6 +19,10 @@ namespace AsicServer.Core.Utils
 
         public static bool VerifyPasswordHash(string password, byte[] storedPasswordHash, byte[] storedPasswordSalt)
         {
+            if (storedPasswordHash == null || storedPasswordSalt == null)
+            {
+                return false;
+            }
             using (var encrypt = new HMACSHA256(storedPasswordSalt))
             {
                 var passwordHash = encrypt.ComputeHash(Encoding.UTF8.GetBytes(password));

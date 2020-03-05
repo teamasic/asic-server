@@ -20,9 +20,9 @@ namespace DataService.Service
 {
     public interface IUserService : IBaseService<User>
     {
-        AccessTokenResponse Authenticate(UserAuthentication user);
+        Task<AccessTokenResponse> Authenticate(UserAuthentication user);
         Task<AccessTokenResponse> Register(RegisteredUser user);
-        Task<AccessTokenResponse> RegisterExternalUsingFirebaseAsync(FirebaseRegisterExternal external);
+        //Task<AccessTokenResponse> RegisterExternalUsingFirebaseAsync(FirebaseRegisterExternal external);
     }
 
     public class UserService : BaseService<User>, IUserService
@@ -38,29 +38,18 @@ namespace DataService.Service
             this.repository = repository;
         }
 
-        public AccessTokenResponse Authenticate(UserAuthentication userAuthen)
+        public async Task<AccessTokenResponse> Authenticate(UserAuthentication userAuthen)
         {
-            var user = repository.GetUserByUsername(userAuthen.Username);
-            AccessTokenResponse token = null;
-
-            UserAuthenticationValidation validation = new UserAuthenticationValidation();
-            var validationResult = validation.Validate(userAuthen);
-
-            if (!validationResult.IsValid || user == null)
-                throw new BaseException(ErrorMessage.CREDENTIALS_NOT_MATCH);
-
-            var result = PasswordManipulation.VerifyPasswordHash(userAuthen.Password,
-                                user.PasswordHash, user.PasswordSalt);
-            if (user != null && result)
+            if (!string.IsNullOrEmpty(userAuthen.FirebaseToken))
             {
-                token = CreateToken(user);
+                return await AuthenticateByFirebaseAsync(new FirebaseRegisterExternal() { FirebaseToken = userAuthen.FirebaseToken });
             }
-            else
+            else if (!string.IsNullOrEmpty(userAuthen.Username)
+                && !string.IsNullOrEmpty(userAuthen.Password))
             {
-                throw new BaseException(ErrorMessage.CREDENTIALS_NOT_MATCH);
+                return AuthenticateByUsernameAndPassword(userAuthen);
             }
-
-            return token;
+            throw new BaseException(ErrorMessage.CREDENTIALS_NOT_MATCH);
         }
 
         public async Task<AccessTokenResponse> Register(RegisteredUser userRegister)
@@ -102,7 +91,86 @@ namespace DataService.Service
             }
         }
 
-        public async Task<AccessTokenResponse> RegisterExternalUsingFirebaseAsync(FirebaseRegisterExternal external)
+        //public async Task<AccessTokenResponse> RegisterExternalUsingFirebaseAsync(FirebaseRegisterExternal external)
+        //{
+        //    using (var trans = unitOfWork.CreateTransaction())
+        //    {
+        //        AccessTokenResponse token = null;
+        //        try
+        //        {
+        //            FirebaseRegisterExternalValidation validation = new FirebaseRegisterExternalValidation();
+        //            validation.ValidateAndThrow(external);
+
+        //            FirebaseToken decodedToken = validation.ParsedToken;
+
+        //            var claims = decodedToken.Claims;
+        //            string email = claims["email"] + "";
+        //            string name = claims["name"] + "";
+        //            string avatar = claims["picture"] + "";
+
+        //            var user = repository.GetUserByUsername(email);
+        //            if (user == null)
+        //            {
+        //                user = new User()
+        //                {
+        //                    Email = email,
+        //                    Username = email,
+        //                    Fullname = name
+        //                };
+        //                user.UserRole.Add(new UserRole()
+        //                {
+        //                    RoleId = (int)RolesEnum.MEMBER
+        //                });
+        //                await this.repository.AddAsync(user);
+        //            }
+        //            token = CreateToken(user);
+        //            trans.Commit();
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            trans.Rollback();
+        //            throw e;
+        //        }
+        //        return token;
+        //    }
+        //}
+
+        private AccessTokenResponse CreateToken(User user)
+        {
+            return new AccessTokenResponse()
+            {
+                User = user.ToViewModel<UserViewModel>(),
+                AccessToken = jwtTokenProvider.CreateAccesstoken(user),
+                Roles = user.UserRole.Select(ur => ur.RoleId.ToString()).ToArray()
+            };
+        }
+
+        private AccessTokenResponse AuthenticateByUsernameAndPassword(UserAuthentication userAuthen)
+        {
+            var user = repository.GetUserByUsername(userAuthen.Username);
+            AccessTokenResponse token = null;
+
+            UserAuthenticationValidation validation = new UserAuthenticationValidation();
+            var validationResult = validation.Validate(userAuthen);
+
+            if (!validationResult.IsValid || user == null)
+                throw new BaseException(ErrorMessage.CREDENTIALS_NOT_MATCH);
+
+            var result = PasswordManipulation.VerifyPasswordHash(userAuthen.Password,
+                                user.PasswordHash, user.PasswordSalt);
+            if (user != null && result)
+            {
+                token = CreateToken(user);
+            }
+            else
+            {
+                throw new BaseException(ErrorMessage.CREDENTIALS_NOT_MATCH);
+            }
+
+            return token;
+        }
+
+        private async Task<AccessTokenResponse> AuthenticateByFirebaseAsync(FirebaseRegisterExternal external)
         {
             using (var trans = unitOfWork.CreateTransaction())
             {
@@ -133,10 +201,9 @@ namespace DataService.Service
                             RoleId = (int)RolesEnum.MEMBER
                         });
                         await this.repository.AddAsync(user);
-                        token = CreateToken(user);
-                        trans.Commit();
                     }
-                    else throw new BaseException(ErrorMessage.USERNAME_EXISTED);
+                    token = CreateToken(user);
+                    trans.Commit();
                 }
                 catch (Exception e)
                 {
@@ -147,14 +214,5 @@ namespace DataService.Service
             }
         }
 
-        private AccessTokenResponse CreateToken(User user)
-        {
-            return new AccessTokenResponse()
-            {
-                User = user.ToViewModel<UserViewModel>(),
-                AccessToken = jwtTokenProvider.CreateAccesstoken(user),
-                Roles = user.UserRole.Select(ur => ur.RoleId.ToString()).ToArray()
-            };
-        }
     }
 }

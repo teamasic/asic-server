@@ -35,6 +35,8 @@ namespace AsicServer.Core.Utils
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
+                Audience = extensionSettings.appSettings.Audience,
+                Issuer  =extensionSettings.appSettings.Issuer,
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(extensionSettings.appSettings.TokenExpireTime),
                 SigningCredentials = 

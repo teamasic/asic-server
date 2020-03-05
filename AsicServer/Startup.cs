@@ -30,6 +30,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.OpenApi.Models;
 
 namespace AsicServer
 {
@@ -85,21 +86,26 @@ namespace AsicServer
         {
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "ASIC API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "ASIC API", Version = "v1" });
 
-                //c.AddSecurityDefinition("Bearer", new ApiKeyScheme
-                //{
-                //    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-                //    Name = "Authorization",
-                //    In = "header",
-                //    Type = "apiKey"
-                //});
+                var scheme = new OpenApiSecurityScheme()
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    },
+                };
 
-                //var security = new Dictionary<string, IEnumerable<string>>
-                //                                  {
-                //                                      {"Bearer", new string[] { }},
-                //                                  };
-                //c.AddSecurityRequirement(security);
+                c.AddSecurityDefinition("Bearer", scheme);
+                var openApiSecurityReq = new OpenApiSecurityRequirement();
+                openApiSecurityReq.Add(scheme, new List<string>());
+                c.AddSecurityRequirement(openApiSecurityReq);
             });
         }
 
@@ -180,7 +186,7 @@ namespace AsicServer
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ASIC API"));
 
             app.UseRouting();
-
+            app.UseAuthorization(); //the middleware is set between app.UseRouting and app.UseEndpoints
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
@@ -188,17 +194,17 @@ namespace AsicServer
                     pattern: "{controller}/{action=Index}/{id?}");
             });
 
-            app.UseSpa(spa =>
-            {
-                spa.Options.SourcePath = "ClientApp";
+            //app.UseSpa(spa =>
+            //{
+            //    spa.Options.SourcePath = "ClientApp";
 
-                if (env.IsDevelopment())
-                {
-                    spa.UseReactDevelopmentServer(npmScript: "start");
-                }
-            });
-            loggerFactory.AddLog4Net();
-            
+            //    if (env.IsDevelopment())
+            //    {
+            //        spa.UseReactDevelopmentServer(npmScript: "start");
+            //    }
+            //});
+            //loggerFactory.AddLog4Net();
+
         }
     }
 }

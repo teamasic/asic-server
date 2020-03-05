@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AsicServer.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -35,10 +36,18 @@ namespace AsicServer.Controllers
             return new string[] { "value1", "value2" };
         }
 
-        [HttpGet("{id}")]
-        public ActionResult<string> Get(int id)
+        [Authorize]
+        [HttpGet("parseToken")]
+        public dynamic parseToken()
         {
-            return "value";
+            var id = this.CurrentUserId;
+            var username = this.CurrentUsername;
+            return new
+            {
+                id = id,
+                username = username,
+                claims = this.currentUser.Claims.Select(c => new { key = c.Type, value = c.Value })
+            };
         }
 
         [HttpPost]

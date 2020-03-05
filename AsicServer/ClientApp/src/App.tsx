@@ -1,16 +1,48 @@
 import * as React from 'react';
-import { Route } from 'react-router';
+import { Route, Redirect } from 'react-router';
 import Layout from './components/Layout';
-import Home from './components/Home';
-import Counter from './components/Counter';
-import FetchData from './components/FetchData';
+import './App.css';
+import { constants } from './constants/constant';
+import Dashboard from './components/Dashboard';
+import 'firebase/auth';
+import { routes } from './constants/routes';
+import Login from './components/Login';
 
-import './custom.css'
+class AppComponent extends React.Component {
 
-export default () => (
-    <Layout>
-        <Route exact path='/' component={Home} />
-        <Route path='/counter' component={Counter} />
-        <Route path='/fetch-data/:startDateIndex?' component={FetchData} />
-    </Layout>
-);
+    constructor(props: any) {
+        super(props);
+    }
+
+    // public componentDidMount() {
+    //     firebase.auth.onAuthStateChanged(authUser => {
+    //         authUser
+    //             ? this.setState(() => ({ authUser }))
+    //             : this.setState(() => ({ authUser: null }));
+    //     });
+    // }
+
+    public render() {
+        const authData = localStorage.getItem(constants.AUTH_IN_LOCAL_STORAGE);
+        if (authData) {
+            return (
+                <Layout >
+                    <Route exact path={routes.DASHBOARD} component={Dashboard} />
+                </Layout>
+            );
+        } else {
+            return (
+                <Layout >
+                    <Route exact path={routes.DEFAULT} component={Login} />
+                </Layout>
+            );
+        }
+    }
+}
+
+
+export default AppComponent;
+
+
+
+

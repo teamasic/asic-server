@@ -22,11 +22,11 @@ namespace AsicServer.Controllers
         }
 
         [HttpPost("login")]
-        public dynamic Login(UserAuthentication user)
+        public async Task<dynamic> Login(UserAuthentication user)
         {
-            return ExecuteInMonitoring(() =>
+            return await ExecuteInMonitoring(async () =>
             {
-                var result = service.Authenticate(user);
+                var result = await service.Authenticate(user);
                 return result;
             });
         }
@@ -40,14 +40,14 @@ namespace AsicServer.Controllers
             });
         }
 
-        [HttpPost("registerExternal")]
-        public async Task<dynamic> RegisterWithFirebase(FirebaseRegisterExternal external)
-        {
-            return await ExecuteInMonitoring(async () =>
-            {
-                return await service.RegisterExternalUsingFirebaseAsync(external);
-            });
-        }
+        //[HttpPost("registerExternal")]
+        //public async Task<dynamic> RegisterWithFirebase(FirebaseRegisterExternal external)
+        //{
+        //    return await ExecuteInMonitoring(async () =>
+        //    {
+        //        return await service.RegisterExternalUsingFirebaseAsync(external);
+        //    });
+        //}
 
     }
 }

@@ -5,9 +5,9 @@ VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsicServer", "AsicServer\AsicServer.csproj", "{2056C477-77E8-49BC-B583-15A18E09E5B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsicServer.Core", "AsicServer.Core\AsicServer.Core.csproj", "{20586178-F375-46DF-A838-D1A50BB5D9EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsicServer.Core", "AsicServer.Core\AsicServer.Core.csproj", "{20586178-F375-46DF-A838-D1A50BB5D9EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataService", "DataService\DataService.csproj", "{2A89756E-52C5-46FC-A314-37DF2DA4C8C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataService", "DataService\DataService.csproj", "{2A89756E-52C5-46FC-A314-37DF2DA4C8C1}"
 EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Database", "Database\Database.sqlproj", "{40CBD160-9DE5-414E-AEC5-FBF773B84C41}"
 EndProject
@@ -30,11 +30,7 @@ Global
 		{2A89756E-52C5-46FC-A314-37DF2DA4C8C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A89756E-52C5-46FC-A314-37DF2DA4C8C1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{40CBD160-9DE5-414E-AEC5-FBF773B84C41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{40CBD160-9DE5-414E-AEC5-FBF773B84C41}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{40CBD160-9DE5-414E-AEC5-FBF773B84C41}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{40CBD160-9DE5-414E-AEC5-FBF773B84C41}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{40CBD160-9DE5-414E-AEC5-FBF773B84C41}.Release|Any CPU.Build.0 = Release|Any CPU
-		{40CBD160-9DE5-414E-AEC5-FBF773B84C41}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

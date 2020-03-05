@@ -53,9 +53,9 @@ namespace AsicServer.Core.Entities
                     .IsRequired()
                     .HasMaxLength(255);
 
-                entity.Property(e => e.PasswordHash).IsRequired();
+                entity.Property(e => e.PasswordHash);
 
-                entity.Property(e => e.PasswordSalt).IsRequired();
+                entity.Property(e => e.PasswordSalt);
 
                 entity.Property(e => e.PhoneNumber)
                     .HasMaxLength(255)
