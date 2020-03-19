@@ -6,8 +6,9 @@ namespace AsicServer.Core.Constant
 {
     public enum RolesEnum
     {
-        MEMBER = 1,
+        ATTENDEE = 1,
         ADMIN = 2,
+        SUPERVISOR = 3
     }
 
 }
