@@ -24,4 +24,19 @@ namespace AsicServer.Core.Entities
 
     }
 
+    public partial class Attendee : BaseEntity
+    {
+
+    }
+
+    public partial class AttendeeDataSet : BaseEntity
+    {
+
+    }
+
+    public partial class DataSet : BaseEntity
+    {
+
+    }
+
 }
