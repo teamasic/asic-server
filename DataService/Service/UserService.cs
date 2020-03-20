@@ -178,7 +178,14 @@ namespace DataService.Service
                 try
                 {
                     FirebaseRegisterExternalValidation validation = new FirebaseRegisterExternalValidation();
-                    validation.ValidateAndThrow(external);
+                    var validationResult = validation.Validate(external);
+                    if (!validationResult.IsValid)
+                    {
+                        var errors = validationResult.Errors.Select(fail => 
+                                                    KeyValuePair.Create<string, IEnumerable<string>>
+                                                            (fail.PropertyName, new string[] { fail.ErrorMessage })).ToList();
+                        throw new BaseException(errors.AsEnumerable());
+                    }
 
                     FirebaseToken decodedToken = validation.ParsedToken;
 
@@ -198,7 +205,7 @@ namespace DataService.Service
                         };
                         user.UserRole.Add(new UserRole()
                         {
-                            RoleId = (int)RolesEnum.MEMBER
+                            RoleId = (int)RolesEnum.ATTENDEE
                         });
                         await this.repository.AddAsync(user);
                     }

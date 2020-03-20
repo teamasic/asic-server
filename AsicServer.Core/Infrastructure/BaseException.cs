@@ -8,6 +8,8 @@ namespace AsicServer.Infrastructure
 {
     public class BaseException : Exception
     {
+        public readonly IEnumerable<KeyValuePair<string, IEnumerable<string>>> Errors;
+
         public BaseException()
         {
         }
@@ -20,8 +22,14 @@ namespace AsicServer.Infrastructure
         {
         }
 
+        public BaseException(IEnumerable<KeyValuePair<string, IEnumerable<string>>> errors)
+        {
+            this.Errors = errors;
+        }
+
         protected BaseException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
+
     }
 }

@@ -15,6 +15,6 @@ namespace AsicServer.Core.Models
         public string Email { get; set; }
         public string Address { get; set; }
         public DateTime? Birthdate { get; set; }
-        public string Role { get; set; } = RolesEnum.MEMBER.ToString();
+        public string Role { get; set; } = RolesEnum.ATTENDEE.ToString();
     }
 }
