@@ -1,7 +1,7 @@
-import User from "./User";
+import RollNumber from "./RollNumber";
 
 export default interface DataSet {
     id: number;
     name: string;
-    users: User[];
+    rollNumbers: RollNumber[];
 }

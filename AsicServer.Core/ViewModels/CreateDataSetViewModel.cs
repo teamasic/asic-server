@@ -4,10 +4,9 @@ using System.Text;
 
 namespace AsicServer.Core.ViewModels
 {
-    public class DataSetViewModel
+    public class CreateDataSetViewModel
     {
-        public int Id { get; set; }
         public string Name { get; set; }
-        public IEnumerable<DataSetUserViewModel> DataSetUser { get; set; }
+        public List<CreateDataSetUserViewModel> RollNumbers { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using AsicServer.Infrastructure;
+﻿using AsicServer.Core.ViewModels;
+using AsicServer.Infrastructure;
 using DataService.Service;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -16,6 +17,25 @@ namespace AsicServer.Controllers
         public DataSetController(ExtensionSettings extensionSettings, IDataSetService dataSetService) : base(extensionSettings)
         {
             this.dataSetService = dataSetService;
+        }
+
+        [HttpGet]
+        public async Task<dynamic> getAll()
+        {
+            return await ExecuteInMonitoring(async () =>
+            {
+                return dataSetService.GetAll();
+            });
+        }
+
+        [HttpPost]
+        public async Task<dynamic> create(CreateDataSetViewModel dataSetViewModel)
+        {
+            return await ExecuteInMonitoring(async () =>
+            {
+                var addedDataSet = await dataSetService.add(dataSetViewModel);
+                return addedDataSet;
+            });
         }
     }
 }

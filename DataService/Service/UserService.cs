@@ -22,6 +22,7 @@ namespace DataService.Service
     {
         Task<AccessTokenResponse> Authenticate(UserAuthentication user);
         Task<AccessTokenResponse> Register(RegisteredUser user);
+        User GetByRollNumber(string rollnumber);
         //Task<AccessTokenResponse> RegisterExternalUsingFirebaseAsync(FirebaseRegisterExternal external);
     }
 
@@ -198,7 +199,7 @@ namespace DataService.Service
                         };
                         user.UserRole.Add(new UserRole()
                         {
-                            RoleId = (int)RolesEnum.MEMBER
+                            RoleId = (int)RolesEnum.ATTENDEE
                         });
                         await this.repository.AddAsync(user);
                     }
@@ -214,5 +215,9 @@ namespace DataService.Service
             }
         }
 
+        public User GetByRollNumber(string rollnumber)
+        {
+            return repository.GetByRollNumber(rollnumber);
+        }
     }
 }

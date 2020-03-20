@@ -18,7 +18,7 @@ namespace AsicServer.Core.Constant
         public static string ROLES_EMPTY = "Role cannot be empty";
         public static string ROLES_NOT_EXISTED = "Role is not existed";
 
-
+        public static string INVALID_DATASET = "Invalid data set";
 
     }
 }

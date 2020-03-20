@@ -7,12 +7,12 @@ namespace AsicServer.Core.Entities
     {
         public DataSet()
         {
-            AttendeeDataSet = new HashSet<AttendeeDataSet>();
+            DataSetUser = new HashSet<DataSetUser>();
         }
 
         public int Id { get; set; }
         public string Name { get; set; }
 
-        public virtual ICollection<AttendeeDataSet> AttendeeDataSet { get; set; }
+        public virtual ICollection<DataSetUser> DataSetUser { get; set; }
     }
 }

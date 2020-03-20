@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace AsicServer.Infrastructure
@@ -10,6 +11,7 @@ namespace AsicServer.Infrastructure
         public bool Success { get; set; }
         public Dictionary<string, IEnumerable<string>> Errors { get; set; }
         public T Data { get; set; }
+        public HttpStatusCode StatusCode { get; set; }
 
         public static BaseResponse<T> GetSuccessResponse(dynamic data)
         {
@@ -26,6 +28,16 @@ namespace AsicServer.Infrastructure
             {
                 Success = false,
                 Errors = errors
+            };
+        }
+
+        public static BaseResponse<T> GetErrorResponse(Dictionary<string, IEnumerable<string>> errors, HttpStatusCode statusCode)
+        {
+            return new BaseResponse<T>()
+            {
+                Success = false,
+                Errors = errors,
+                StatusCode = statusCode
             };
         }
 

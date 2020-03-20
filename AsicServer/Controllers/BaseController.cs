@@ -69,7 +69,7 @@ namespace AsicServer.Controllers
                 {
                     { "General", new List<string> { ex.Message } }
                 };
-                return BaseResponse<T>.GetErrorResponse(err);
+                return BaseResponse<T>.GetErrorResponse(err, ex.StatusCode);
             }
             catch (Exception ex)
             {

@@ -1,5 +1,5 @@
 import { Reducer, Action, AnyAction } from "redux";
-import { DataSetState } from "./datasetState";
+import { DataSetState } from "./dataSetState";
 import { ACTIONS } from "./dataSetActionCreator";
 
 // REDUCER - For a given state and action, returns the new state. To support time travel, this must not mutate the old state.

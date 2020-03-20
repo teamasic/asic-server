@@ -4,9 +4,8 @@ using System.Text;
 
 namespace AsicServer.Core.ViewModels
 {
-    public class AttendeeViewModel
+    public class CreateDataSetUserViewModel
     {
-        public int Id { get; set; }
-        public string Code { get; set; }
+        public string RollNumber { get; set; }
     }
 }
