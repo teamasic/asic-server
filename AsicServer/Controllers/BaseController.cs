@@ -44,6 +44,7 @@ namespace AsicServer.Controllers
                 {
                     { "General", new List<string> { ex.Message } }
                 };
+                ex.Errors?.ToList().ForEach(e => err.Append(e));
                 return BaseResponse<T>.GetErrorResponse(err);
             }
             catch (Exception ex)
@@ -69,6 +70,7 @@ namespace AsicServer.Controllers
                 {
                     { "General", new List<string> { ex.Message } }
                 };
+                ex.Errors?.ToList().ForEach(e => err.Add(e.Key, e.Value));
                 return BaseResponse<T>.GetErrorResponse(err);
             }
             catch (Exception ex)
