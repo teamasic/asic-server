@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AsicServer.Core.Models;
 using AsicServer.Infrastructure;
 using DataService.Service;
+using DataService.Service.UserService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
