@@ -15,11 +15,15 @@ namespace AsicServer.Core.Entities
         {
         }
 
+        public virtual DbSet<AttendeeGroups> AttendeeGroups { get; set; }
+        public virtual DbSet<ChangeRequests> ChangeRequests { get; set; }
+        public virtual DbSet<Groups> Groups { get; set; }
+        public virtual DbSet<Records> Records { get; set; }
         public virtual DbSet<Role> Role { get; set; }
+        public virtual DbSet<Rooms> Rooms { get; set; }
+        public virtual DbSet<Sessions> Sessions { get; set; }
         public virtual DbSet<User> User { get; set; }
         public virtual DbSet<UserRole> UserRole { get; set; }
-        public virtual DbSet<DataSet> DataSet { get; set; }
-        public virtual DbSet<DataSetUser> DataSetUser { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

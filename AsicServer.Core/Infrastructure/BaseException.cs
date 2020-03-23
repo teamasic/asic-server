@@ -12,6 +12,7 @@ namespace AsicServer.Infrastructure
     {
         public HttpStatusCode StatusCode { get; set; }
         public string ContentType { get; set; } = @"text/plain";
+        public readonly IEnumerable<KeyValuePair<string, IEnumerable<string>>> Errors;
 
         public BaseException()
         {
@@ -23,6 +24,11 @@ namespace AsicServer.Infrastructure
 
         public BaseException(string message, Exception innerException) : base(message, innerException)
         {
+        }
+
+        public BaseException(IEnumerable<KeyValuePair<string, IEnumerable<string>>> errors)
+        {
+            this.Errors = errors;
         }
 
         protected BaseException(SerializationInfo info, StreamingContext context) : base(info, context)

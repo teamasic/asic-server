@@ -16,21 +16,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataService.Service
+namespace DataService.Service.UserService
 {
-    public interface IUserService : IBaseService<User>
+    public interface IRecordService : IBaseService<User>
     {
         Task<AccessTokenResponse> Authenticate(UserAuthentication user);
         Task<AccessTokenResponse> Register(RegisteredUser user);
         //Task<AccessTokenResponse> RegisterExternalUsingFirebaseAsync(FirebaseRegisterExternal external);
     }
 
-    public class UserService : BaseService<User>, IUserService
+    public class RecordService : BaseService<User>, IRecordService
     {
         private readonly JwtTokenProvider jwtTokenProvider;
         private readonly IUserRepository repository;
 
-        public UserService(IUserRepository repository,
+        public RecordService(IUserRepository repository,
                             UnitOfWork unitOfWork,
                             JwtTokenProvider jwtTokenProvider) : base(unitOfWork)
         {
@@ -178,7 +178,14 @@ namespace DataService.Service
                 try
                 {
                     FirebaseRegisterExternalValidation validation = new FirebaseRegisterExternalValidation();
-                    validation.ValidateAndThrow(external);
+                    var validationResult = validation.Validate(external);
+                    if (!validationResult.IsValid)
+                    {
+                        var errors = validationResult.Errors.Select(fail => 
+                                                    KeyValuePair.Create<string, IEnumerable<string>>
+                                                            (fail.PropertyName, new string[] { fail.ErrorMessage })).ToList();
+                        throw new BaseException(errors.AsEnumerable());
+                    }
 
                     FirebaseToken decodedToken = validation.ParsedToken;
 
@@ -213,5 +220,6 @@ namespace DataService.Service
                 return token;
             }
         }
+
     }
 }

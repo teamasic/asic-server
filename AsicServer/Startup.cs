@@ -31,6 +31,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
 using Microsoft.OpenApi.Models;
+using DataService.Service.UserService;
 
 namespace AsicServer
 {

@@ -24,14 +24,4 @@ namespace AsicServer.Core.Entities
 
     }
 
-    public partial class DataSetUser : BaseEntity
-    {
-
-    }
-
-    public partial class DataSet : BaseEntity
-    {
-
-    }
-
 }
