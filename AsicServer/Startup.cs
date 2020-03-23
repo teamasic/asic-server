@@ -115,8 +115,6 @@ namespace AsicServer
             {
                 cfg.CreateMap<RegisteredUser, User>();
                 cfg.CreateMap<User, UserViewModel>().ReverseMap();
-                cfg.CreateMap<DataSet, DataSetViewModel>().ReverseMap();
-                cfg.CreateMap<DataSetUser, DataSetUserViewModel>().ReverseMap();
             });
         }
 
@@ -158,10 +156,6 @@ namespace AsicServer
 
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IDataSetService, DataSetService>();
-            services.AddScoped<IDataSetRepository, DataSetRepository>();
-            services.AddScoped<IDataSetUserService, DataSetUserService>();
-            services.AddScoped<IDataSetUserRepository, DataSetUserRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

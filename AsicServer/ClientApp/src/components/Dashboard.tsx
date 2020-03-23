@@ -6,22 +6,18 @@ import Form, { FormComponentProps } from 'antd/lib/form';
 import { isNullOrUndefined } from 'util';
 import { parse } from 'papaparse';
 import { renderStripedTable } from '../utils';
-import { dataSetActionCreators } from '../store/dataset/dataSetActionCreator'
 import { bindActionCreators } from 'redux';
 import { ApplicationState } from '../store';
-import DataSet from '../models/DataSet';
 
 interface DashboardComponentState {
   modalVisible: boolean,
   rollNumbers: [],
-  dataSets: DataSet[],
   modalPageNo: number,
   dataSetPageNo: number,
   tblDataSetLoading: boolean
 }
 
 type Props = FormComponentProps
-  & typeof dataSetActionCreators // ... plus action creators we've requested
   & RouteComponentProps<{}>; // ... plus incoming routing parameters
 
 class Dashboard extends React.PureComponent<Props, DashboardComponentState> {
@@ -31,15 +27,10 @@ class Dashboard extends React.PureComponent<Props, DashboardComponentState> {
     this.state = {
       modalVisible: false,
       rollNumbers: [],
-      dataSets: new Array(0),
       modalPageNo: 1,
       dataSetPageNo: 1,
       tblDataSetLoading: true
     }
-  }
-
-  componentDidMount() {
-    this.fetchData();
   }
 
   private openModal = () => {
@@ -51,33 +42,6 @@ class Dashboard extends React.PureComponent<Props, DashboardComponentState> {
   private closeModal = () => {
     this.setState({
       modalVisible: false
-    });
-  }
-
-  private handleOk = (e: any) => {
-    e.preventDefault();
-    this.props.form.validateFields((err: any, values: any) => {
-      if (!err) {
-        console.log(values.name);
-        var createDataSet = {
-          id: 0,
-          name: values.name,
-          rollNumbers: this.state.rollNumbers
-        };
-        this.props.createDataSet(createDataSet, this.createDataSetSuccess);
-      }
-    });
-  }
-
-  private createDataSetSuccess = () => {
-    this.fetchData();
-    this.closeModal();
-  }
-
-  private setDataSets = (data: DataSet[]) => {
-    this.setState({
-      dataSets: data,
-      tblDataSetLoading: false
     });
   }
 
@@ -183,88 +147,11 @@ class Dashboard extends React.PureComponent<Props, DashboardComponentState> {
     ];
     return (
       <React.Fragment>
-        <Button type="primary" onClick={this.openModal}>New Data Set</Button>
-        <Modal
-          visible={this.state.modalVisible}
-          title="Create new Data set"
-          centered
-          onCancel={this.closeModal}
-          width='50%'
-          okText="Save"
-          onOk={this.handleOk}
-        >
-          <Form layout="inline">
-            <Row>
-              <Col span={16}>
-                <Form.Item label="Name" required>
-                  {getFieldDecorator('name', {
-                    rules: [{ required: true, message: 'Please input data set name' }],
-                  })(
-                    <Input placeholder="Enter name" />
-                  )}
-                </Form.Item>
-              </Col>
-            </Row>
-          </Form>
-          <Divider orientation="left">List Attendees</Divider>
-          <Row gutter={[0, 32]}>
-            <Col span={8}>
-              <Upload
-                multiple={false}
-                accept=".csv"
-                showUploadList={false}
-                beforeUpload={this.validateBeforeUpload}
-              >
-                <Button>
-                  <Icon type="upload" /> Upload CSV File
-                </Button>
-              </Upload>
-            </Col>
-          </Row>
-          <Row>
-            <Table dataSource={this.state.rollNumbers}
-              columns={columns} 
-              rowKey="RollNumber"
-              bordered
-              rowClassName={renderStripedTable}
-              pagination={{
-                pageSize: 10,
-                total: this.state.rollNumbers != undefined ? this.state.rollNumbers.length : 0,
-                showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} of ${total} attendees`,
-                onChange: this.onModalPageChange
-              }}
-            />;
-        </Row>
-        </Modal>
-        <Table 
-          dataSource={this.state.dataSets}
-          columns={dataSetColumn} 
-          rowKey="id"
-          bordered
-          loading={this.state.tblDataSetLoading}
-          rowClassName={renderStripedTable}
-          pagination={{
-            pageSize: 10,
-            total: this.state.dataSets != undefined ? this.state.dataSets.length : 0,
-            showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} of ${total} rows`,
-            onChange: this.onDataSetPageChange
-          }}
-        />
+          
       </React.Fragment>
     );
   }
-
-  private fetchData = () => {
-    this.setState({
-      tblDataSetLoading: true
-    });
-    this.props.getAllDataSet(this.setDataSets);
-  }
-}
-
-const matchDispatchToProps = (dispatch: any) => {
-  return bindActionCreators(dataSetActionCreators, dispatch);
 }
 
 export default Form.create({ name: 'create_dataset' })
-(connect((state: ApplicationState) => state.dataSet, matchDispatchToProps)(Dashboard));
+(connect()(Dashboard));

@@ -41,5 +41,16 @@ namespace AsicServer.Infrastructure
             };
         }
 
+        public static BaseResponse<T> GetErrorResponse(Dictionary<string, IEnumerable<string>> errors, HttpStatusCode statusCode, dynamic data)
+        {
+            return new BaseResponse<T>()
+            {
+                Success = false,
+                Errors = errors,
+                StatusCode = statusCode,
+                Data = data
+            };
+        }
+
     }
 }

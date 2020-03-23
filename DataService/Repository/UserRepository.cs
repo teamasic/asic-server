@@ -10,9 +10,6 @@ namespace DataService.Repository
     public interface IUserRepository : IBaseRepository<User>
     {
         User GetUserByUsername(string username);
-
-        User GetByRollNumber(string rollNumber);
-
         bool IsExisted(string username);
     }
 
@@ -24,7 +21,7 @@ namespace DataService.Repository
 
         public User GetByRollNumber(string rollNumber)
         {
-            var user = this.Get(filter: acc => string.Equals(acc.RollNumber, rollNumber),
+            var user = Get(filter: acc => string.Equals(acc.RollNumber, rollNumber),
                 orderBy: null).FirstOrDefault();
             return user;
         }

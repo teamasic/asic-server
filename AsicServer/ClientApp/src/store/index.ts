@@ -1,22 +1,18 @@
 
 import UserReducer from './user/userReducer';
-import DataSetReducer from './dataset/dataSetReducer';
 import { AnyAction } from 'redux';
 import { UserState } from './user/userState';
-import { DataSetState } from './dataset/dataSetState';
 
 // The top-level state object
 export interface ApplicationState {
     user: UserState | undefined;
-    dataSet: DataSetState | undefined;
 }
 
 // Whenever an action is dispatched, Redux will update each top-level application state property using
 // the reducer with the matching name. It's important that the names match exactly, and that the reducer
 // acts on the corresponding ApplicationState property type.
 export const reducers = {
-    user: UserReducer,
-    dataSet: DataSetReducer
+    user: UserReducer
 };
 
 // This type can be used as a hint on action creators so that its 'dispatch' and 'getState' params are

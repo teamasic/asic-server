@@ -58,7 +58,7 @@ namespace AsicServer.Controllers
 
         protected async Task<BaseResponse<T>> ExecuteInMonitoring<T>(Func<Task<T>> function)
         {
-            dynamic result;
+            dynamic result = null;
             try
             {
                 result = await function();
@@ -69,7 +69,7 @@ namespace AsicServer.Controllers
                 {
                     { "General", new List<string> { ex.Message } }
                 };
-                return BaseResponse<T>.GetErrorResponse(err, ex.StatusCode);
+                return BaseResponse<T>.GetErrorResponse(err, ex.StatusCode, result);
             }
             catch (Exception ex)
             {
