@@ -200,6 +200,8 @@ namespace AsicServer
                     pattern: "{controller}/{action=Index}/{id?}");
             });
 
+            loggerFactory.AddFile("Logs/server-log-{Date}.txt");
+
             //app.UseSpa(spa =>
             //{
             //    spa.Options.SourcePath = "ClientApp";
@@ -209,7 +211,6 @@ namespace AsicServer
             //        spa.UseReactDevelopmentServer(npmScript: "start");
             //    }
             //});
-            //loggerFactory.AddLog4Net();
 
         }
     }
