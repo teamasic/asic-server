@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using AsicServer.Core.Models;
 using AsicServer.Infrastructure;
@@ -49,6 +50,16 @@ namespace AsicServer.Controllers
         //        return await service.RegisterExternalUsingFirebaseAsync(external);
         //    });
         //}
+
+        [HttpPost]
+        public async Task<dynamic> CreateMultipleUsers(CreateMultipleUser multipleUser)
+        {
+            return await ExecuteInMonitoring(async () =>
+            {
+                var stream = multipleUser.ZipFile.OpenReadStream();
+                return true;
+            });
+        }
 
     }
 }

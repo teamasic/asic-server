@@ -5,7 +5,8 @@ import { AnyAction } from "redux";
 import UserLogin from "../../models/UserLogin";
 import { constants } from "../../constants/constant";
 import { UserLoginResponse } from "../../models/UserLoginResponse";
-import { login } from "../../services/User";
+import { login, createUsers } from "../../services/User";
+import CreateUsers from "../../models/CreateUsers";
 
 export const ACTIONS = {
     START_REQUEST_LOGIN:"START_REQUEST_LOGIN",
@@ -49,6 +50,16 @@ const requestLogin = (userLogin: UserLogin, redirect: Function): AppThunkAction 
     }
 }
 
+const requestCreateUsers = (newUsers: CreateUsers): AppThunkAction => async (dispatch, getState) => {
+    const apiResponse: ApiResponse = await createUsers(newUsers);
+    if(apiResponse.success) {
+
+    } else {
+        console.log(apiResponse.errors);
+    }
+}
+
 export const userActionCreators = {
-    requestLogin: requestLogin
+    requestLogin: requestLogin,
+    requestCreateUsers: requestCreateUsers
 };
