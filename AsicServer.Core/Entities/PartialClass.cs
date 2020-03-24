@@ -38,5 +38,33 @@ namespace AsicServer.Core.Entities
     {
 
     }
+    public partial class Records : BaseEntity
+    {
 
+    }
+
+    public partial class AttendeeGroups : BaseEntity
+    {
+
+    }
+    public partial class ChangeRequests : BaseEntity
+    {
+
+    }
+    public partial class Groups : BaseEntity
+    {
+
+    }
+    public partial class Rooms : BaseEntity
+    {
+
+    }
+    public partial class Sessions : BaseEntity
+    {
+
+    }
+    public partial class RecordStaging : BaseEntity
+    {
+
+    }
 }

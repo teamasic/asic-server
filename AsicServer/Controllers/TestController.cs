@@ -26,7 +26,7 @@ namespace AsicServer.Controllers
         [HttpGet("log")]
         public ActionResult<string> GetLog()
         {
-            var fs = System.IO.File.ReadAllText(@"myapp.log");
+            var fs = System.IO.File.ReadAllText(@"DebugLog/debug.log");
             return fs;
         }
 

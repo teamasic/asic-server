@@ -12,10 +12,10 @@ namespace AsicServer.Core.Entities
         }
 
         public int Id { get; set; }
-        public string Name { get; set; }
         public string Code { get; set; }
+        public string Name { get; set; }
         public DateTime? DateTimeCreated { get; set; }
-        public int Deleted { get; set; }
+        public bool Deleted { get; set; }
         public int? MaxSessionCount { get; set; }
 
         public virtual ICollection<AttendeeGroups> AttendeeGroups { get; set; }

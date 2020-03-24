@@ -24,6 +24,7 @@ namespace AsicServer.Core.Entities
         public virtual DbSet<Sessions> Sessions { get; set; }
         public virtual DbSet<User> User { get; set; }
         public virtual DbSet<UserRole> UserRole { get; set; }
+        public virtual DbSet<RecordStaging> RecordStaging { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -89,6 +90,9 @@ namespace AsicServer.Core.Entities
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_UserRole_User");
             });
+
+            modelBuilder.Entity<AttendeeGroups>()
+                    .HasKey(ag => new { ag.AttendeeId, ag.GroupId });
         }
     }
 }

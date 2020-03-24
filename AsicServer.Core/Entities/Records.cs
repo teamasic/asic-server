@@ -12,8 +12,12 @@ namespace AsicServer.Core.Entities
 
         public long Id { get; set; }
         public long? AttendeeId { get; set; }
+        public string AttendeeCode { get; set; }
         public int? SessionId { get; set; }
-        public int Present { get; set; }
+        public string SessionName { get; set; }
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public bool Present { get; set; }
 
         public virtual User Attendee { get; set; }
         public virtual Sessions Session { get; set; }
