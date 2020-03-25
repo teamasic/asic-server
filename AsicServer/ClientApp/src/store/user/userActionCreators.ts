@@ -6,7 +6,7 @@ import UserLogin from "../../models/UserLogin";
 import { constants } from "../../constants/constant";
 import { UserLoginResponse } from "../../models/UserLoginResponse";
 import { login, createUsers } from "../../services/User";
-import CreateUsers from "../../models/CreateUsers";
+import { error, success, warning } from "../../utils";
 
 export const ACTIONS = {
     START_REQUEST_LOGIN:"START_REQUEST_LOGIN",
@@ -50,10 +50,19 @@ const requestLogin = (userLogin: UserLogin, redirect: Function): AppThunkAction 
     }
 }
 
-const requestCreateUsers = (newUsers: CreateUsers): AppThunkAction => async (dispatch, getState) => {
-    const apiResponse: ApiResponse = await createUsers(newUsers);
+const requestCreateUsers = (zipFile: File, csvFile: File): AppThunkAction => async (dispatch, getState) => {
+    const apiResponse: ApiResponse = await createUsers(zipFile, csvFile);
     if(apiResponse.success) {
-
+        var result = apiResponse.data;
+        if(result.length > 0) {
+            var msg = "These " + result.length + " users is saved without images: ";
+            result.forEach((rollnumber: string) => {
+                msg += rollnumber + " ";
+            });
+            warning(msg);
+        } else {
+            success("Save users successfully!");
+        }
     } else {
         console.log(apiResponse.errors);
     }

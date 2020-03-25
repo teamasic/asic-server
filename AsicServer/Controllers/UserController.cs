@@ -52,12 +52,12 @@ namespace AsicServer.Controllers
         //}
 
         [HttpPost]
-        public async Task<dynamic> CreateMultipleUsers(CreateMultipleUser multipleUser)
+        public async Task<dynamic> CreateMultipleUsers(IFormFile zipFile, IFormFile users)
         {
             return await ExecuteInMonitoring(async () =>
             {
-                var stream = multipleUser.ZipFile.OpenReadStream();
-                return true;
+                var userWithoutImages = service.CreateUsers(users, zipFile);
+                return userWithoutImages;
             });
         }
 

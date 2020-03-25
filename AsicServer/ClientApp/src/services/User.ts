@@ -12,8 +12,11 @@ export const login = async (userLogin: UserLogin): Promise<ApiResponse> => {
     return await response.data;
 };
 
-export const createUsers = async (newUsers: CreateUsers): Promise<ApiResponse> => {
-    const apiResponse = await axios.post(baseRoute, newUsers);
+export const createUsers = async (zipFile: File, csvFile: File): Promise<ApiResponse> => {
+    var formData = new FormData();
+    formData.append("zipFile", zipFile);
+    formData.append("users", csvFile);
+    const apiResponse = await axios.post(baseRoute, formData);
     return await apiResponse.data;
 }
 

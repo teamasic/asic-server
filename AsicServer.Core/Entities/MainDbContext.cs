@@ -89,6 +89,9 @@ namespace AsicServer.Core.Entities
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_UserRole_User");
             });
+
+            modelBuilder.Entity<AttendeeGroups>()
+                    .HasKey(ag => new { ag.AttendeeId, ag.GroupId });
         }
     }
 }

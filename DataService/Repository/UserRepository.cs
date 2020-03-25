@@ -10,6 +10,7 @@ namespace DataService.Repository
     public interface IUserRepository : IBaseRepository<User>
     {
         User GetUserByUsername(string username);
+        bool AddRangeIfNotInDb(List<User> users);
         bool IsExisted(string username);
     }
 
@@ -17,6 +18,26 @@ namespace DataService.Repository
     {
         public UserRepository(DbContext dbContext) : base(dbContext)
         {
+        }
+
+        public bool AddRangeIfNotInDb(List<User> users)
+        {
+            try
+            {
+                foreach (var user in users)
+                {
+                    var userInDb = GetUserByUsername(user.Username);
+                    if(userInDb == null)
+                    {
+                        dbContext.Add(user);
+                    }
+                }
+            } catch (Exception e)
+            {
+                return false;
+            }
+            dbContext.SaveChanges();
+            return true;
         }
 
         public User GetByRollNumber(string rollNumber)

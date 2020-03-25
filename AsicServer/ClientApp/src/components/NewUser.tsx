@@ -48,7 +48,8 @@ interface ComponentState {
     msgImportCSV: string,
     msgImportZIP: string,
     uploadingZIPFile: boolean,
-    zipFile: File
+    zipFile: File,
+    csvFile: File
 }
 
 type Props = typeof userActionCreators; // ... plus action creators we've requested
@@ -64,7 +65,8 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
             msgImportCSV: ' ',
             msgImportZIP: ' ',
             uploadingZIPFile: false,
-            zipFile: new File([], 'Null')
+            zipFile: new File([], 'Null'),
+            csvFile: new File([], 'Null')
         }
     }
 
@@ -107,6 +109,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                     if (thisState.checkValidFileFormat(results.data)) {
                         thisState.setState({
                             importUsers: results.data,
+                            csvFile: file,
                             msgImportCSV: ''
                         }, () => {
                             resolve();
@@ -140,10 +143,8 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
     }
 
     private onZipFileChange = (info: any) => {
-        console.log(info);
         if (info.file.type === FILE_TYPE.ZIP) {
             var status = info.file.status;
-            console.log(status);
             if (status === 'uploading') {
                 this.setState({ uploadingZIPFile: true });
             } else {
@@ -172,8 +173,9 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                 users: importUsers,
                 zipFile: this.state.zipFile
             };
-            console.log(createUsers);
-            this.props.requestCreateUsers(createUsers);
+            var csvFile = this.state.csvFile;
+            var zipFile = this.state.zipFile;
+            this.props.requestCreateUsers(zipFile, csvFile);
         }
     }
 
@@ -181,11 +183,15 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
         var result = true;
         if (this.state.importUsers.length === 0) {
             this.setState({ msgImportCSV: ERR_MESSAGE.REQUIRED_CSV_FILE });
-            return false;
+            result = false;
         }
         if (this.state.zipFile.name === 'Null') {
             this.setState({ msgImportZIP: ERR_MESSAGE.REQUIRED_ZIP_FILE });
-            return false;
+            result = false;
+        }
+        if (this.state.csvFile.name === 'Null') {
+            this.setState({ msgImportCSV: ERR_MESSAGE.REQUIRED_CSV_FILE });
+            result = false;
         }
         return result;
     }
@@ -252,7 +258,12 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                             </Col>
                             <Col span={20}>
                                 {this.state.msgImportCSV.length === 0 ?
-                                    (<Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" />) :
+                                    (
+                                        <div>
+                                            <Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" />
+                                            <Text type="secondary"> {this.state.csvFile.name}</Text>
+                                        </div>
+                                    ) :
                                     this.state.msgImportCSV.length !== 1 ?
                                         (<Icon type="close-circle" theme="twoTone" twoToneColor="#ff0000" />) : null
                                 }
@@ -283,7 +294,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                     onChange={this.onZipFileChange}
                                 >
                                     <p className="ant-upload-drag-icon">
-                                        {this.state.uploadingZIPFile == true ?
+                                        {this.state.uploadingZIPFile === true ?
                                             (<Icon type="loading" />) :
                                             (<Icon type="inbox" />)
                                         }
@@ -294,7 +305,12 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                             </Col>
                             <Col span={15} offset={1}>
                                 {this.state.msgImportZIP.length === 0 ?
-                                    (<Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" />) :
+                                    (
+                                        <div>
+                                            <Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" />
+                                            <Text type="secondary"> {this.state.zipFile.name}</Text>
+                                        </div>
+                                    ) :
                                     this.state.msgImportZIP.length !== 1 ?
                                         (<Icon type="close-circle" theme="twoTone" twoToneColor="#ff0000" />) : null
                                 }
@@ -353,4 +369,4 @@ const matchDispatchToProps = (dispatch: any) => {
     return bindActionCreators(userActionCreators, dispatch);
 }
 
-export default connect((state: ApplicationState) => ({...state.user}), matchDispatchToProps)(NewUser);
+export default connect((state: ApplicationState) => ({ ...state.user }), matchDispatchToProps)(NewUser);

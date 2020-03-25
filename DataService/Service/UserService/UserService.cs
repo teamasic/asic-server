@@ -4,15 +4,21 @@ using AsicServer.Core.Models;
 using AsicServer.Core.Utils;
 using AsicServer.Core.ViewModels;
 using AsicServer.Infrastructure;
+using CsvHelper;
 using DataService.Repository;
 using DataService.UoW;
 using DataService.Validation;
 using FirebaseAdmin.Auth;
 using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,6 +29,7 @@ namespace DataService.Service.UserService
         Task<AccessTokenResponse> Authenticate(UserAuthentication user);
         Task<AccessTokenResponse> Register(RegisteredUser user);
         //Task<AccessTokenResponse> RegisterExternalUsingFirebaseAsync(FirebaseRegisterExternal external);
+        List<string> CreateUsers(IFormFile csvFile, IFormFile zipFile);
     }
 
     public class UserService : BaseService<User>, IUserService
@@ -181,7 +188,7 @@ namespace DataService.Service.UserService
                     var validationResult = validation.Validate(external);
                     if (!validationResult.IsValid)
                     {
-                        var errors = validationResult.Errors.Select(fail => 
+                        var errors = validationResult.Errors.Select(fail =>
                                                     KeyValuePair.Create<string, IEnumerable<string>>
                                                             (fail.PropertyName, new string[] { fail.ErrorMessage })).ToList();
                         throw new BaseException(errors.AsEnumerable());
@@ -219,6 +226,112 @@ namespace DataService.Service.UserService
                 }
                 return token;
             }
+        }
+
+        public List<string> CreateUsers(IFormFile csvFile, IFormFile zipFile)
+        {
+            var stream = csvFile.OpenReadStream();
+            TextReader textReader = new StreamReader(stream);
+            using (var csv = new CsvReader(textReader, CultureInfo.InvariantCulture))
+            {
+                var users = csv.GetRecords<CreateUser>();
+                var newUsers = new List<User>();
+                foreach (var user in users)
+                {
+                    var newUser = new User()
+                    {
+                        Username = user.Email,
+                        Email = user.Email,
+                        Fullname = user.Fullname,
+                        RollNumber = user.RollNumber
+                    };
+                    newUser.UserRole.Add(new UserRole()
+                    {
+                        RoleId = (int)RolesEnum.ATTENDEE
+                    });
+                    newUsers.Add(newUser);
+                }
+                if (repository.AddRangeIfNotInDb(newUsers))
+                {
+                    var userEntries = UnZip(zipFile.OpenReadStream(), newUsers);
+                    var userWithoutImage = GetUsersWithoutImage(userEntries);
+                    return userWithoutImage;
+                }
+                else
+                    throw new BaseException(HttpStatusCode.BadRequest, ErrorMessage.INVALID_USERS);
+            }
+        }
+
+        private Dictionary<string, List<ZipArchiveEntry>> UnZip(Stream zipStream, List<User> users)
+        {
+            var userStreams = new Dictionary<string, List<ZipArchiveEntry>>();
+            foreach (var user in users)
+            {
+                userStreams.Add(user.RollNumber, new List<ZipArchiveEntry>());
+            }
+
+            using (ZipArchive archive = new ZipArchive(zipStream))
+            {
+                foreach (var entry in archive.Entries)
+                {
+                    var fileName = entry.FullName.Split('/');
+                    var archiveEntry = new List<ZipArchiveEntry>();
+                    if (userStreams.ContainsKey(fileName[0]))
+                    {
+                        if (fileName[1].Length == 0 || (fileName[1].Length > 0 && IsImageFile(fileName[1])))
+                        {
+                            userStreams.TryGetValue(fileName[0], out archiveEntry);
+                            archiveEntry.Add(entry);
+                        }
+                    }
+                }
+                ExtrectToFile(userStreams.Values);
+            }
+            return userStreams;
+        }
+
+        private void ExtrectToFile(Dictionary<string, List<ZipArchiveEntry>>.ValueCollection values)
+        {
+            foreach (var item in values)
+            {
+                foreach (var entry in item)
+                {
+                    var directory = Directory.GetCurrentDirectory() + "\\Dataset";
+                    if (!directory.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+                        directory += Path.DirectorySeparatorChar;
+                    string destinationPath = Path.GetFullPath(Path.Combine(directory, entry.FullName));
+                    if (destinationPath.EndsWith("\\"))
+                    {
+                        destinationPath = destinationPath.Remove(destinationPath.Length - 1);
+                        if (!Directory.Exists(destinationPath))
+                        {
+                            Directory.CreateDirectory(destinationPath);
+                        }
+                    }
+                    else
+                        entry.ExtractToFile(destinationPath, true);
+                }
+            }
+        }
+
+        private List<string> GetUsersWithoutImage(Dictionary<string, List<ZipArchiveEntry>> users)
+        {
+            var usersWithOutImage = new List<string>();
+            foreach (var user in users)
+            {
+                if(user.Value.Count == 0)
+                {
+                    usersWithOutImage.Add(user.Key);
+                }
+            }
+            return usersWithOutImage;
+        }
+
+        private bool IsImageFile(string fileName)
+        {
+            return fileName.EndsWith(".tif", StringComparison.OrdinalIgnoreCase)
+                || fileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+                || fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
