@@ -8,6 +8,7 @@ import { isNullOrUndefined } from 'util';
 import { userActionCreators } from '../store/user/userActionCreators';
 import { bindActionCreators } from 'redux';
 import { ApplicationState } from '../store';
+import { FormComponentProps } from 'antd/lib/form';
 
 const { Dragger } = Upload;
 
@@ -46,13 +47,17 @@ interface ComponentState {
     importUsers: any,
     page: number,
     msgImportCSV: string,
-    msgImportZIP: string,
-    uploadingZIPFile: boolean,
-    zipFile: File,
+    msgImportMultipleZIP: string,
+    msgImportSingleZIP: string,
+    uploadingMultipleZIPFile: boolean,
+    uploadingSingleZIPFile: boolean,
+    multipleZipFile: File,
+    singleZipFile: File,
     csvFile: File
 }
 
-type Props = typeof userActionCreators; // ... plus action creators we've requested
+type Props = typeof userActionCreators // ... plus action creators we've requested
+    & FormComponentProps;
 
 class NewUser extends React.PureComponent<Props, ComponentState> {
 
@@ -63,15 +68,17 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
             importUsers: [],
             page: 1,
             msgImportCSV: ' ',
-            msgImportZIP: ' ',
-            uploadingZIPFile: false,
-            zipFile: new File([], 'Null'),
+            msgImportMultipleZIP: ' ',
+            msgImportSingleZIP: ' ',
+            uploadingMultipleZIPFile: false,
+            uploadingSingleZIPFile: false,
+            multipleZipFile: new File([], 'Null'),
+            singleZipFile: new File([], 'Null'),
             csvFile: new File([], 'Null')
         }
     }
 
     private onTabChange = (key: string) => {
-        console.log(key);
         this.setState({ tabKey: key })
     };
 
@@ -88,14 +95,28 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                     this.setState({ msgImportCSV: ERR_MESSAGE.INVALID_CSV_FILE_FORMAT });
                     break;
                 case FILE_TYPE.ZIP:
-                    this.setState({ msgImportZIP: ERR_MESSAGE.INVALID_ZIP_FILE_FORMAT });
+                    switch (this.state.tabKey) {
+                        case TAB_KEY.MULTIPLE:
+                            this.setState({ msgImportMultipleZIP: ERR_MESSAGE.INVALID_ZIP_FILE_FORMAT });
+                            break;
+                        case TAB_KEY.SINGLE:
+                            this.setState({ msgImportSingleZIP: ERR_MESSAGE.INVALID_ZIP_FILE_FORMAT });
+                            break;
+                    }
                     break;
             }
             return false;
         }
         if (fileType === FILE_TYPE.ZIP) {
-            this.setState({ zipFile: file });
-            return true
+            switch (this.state.tabKey) {
+                case TAB_KEY.MULTIPLE:
+                    this.setState({ multipleZipFile: file });
+                    break;
+                case TAB_KEY.SINGLE:
+                    this.setState({ singleZipFile: file });
+                    break;
+            }
+            return true;
         }
         return this.parseFileToTable(file);
     }
@@ -106,7 +127,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
             parse(file, {
                 header: true,
                 complete: function (results: any, file: File) {
-                    if (thisState.checkValidFileFormat(results.data)) {
+                    if (thisState.checkValidCSVFileFormat(results.data)) {
                         thisState.setState({
                             importUsers: results.data,
                             csvFile: file,
@@ -130,7 +151,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
         });
     }
 
-    private checkValidFileFormat = (users: []) => {
+    private checkValidCSVFileFormat = (users: []) => {
         let temp: { Email: string, RollNumber: string, Fullname: string }[] = users;
         if (temp.length > 0) {
             if (!isNullOrUndefined(temp[0].Email)
@@ -145,13 +166,27 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
     private onZipFileChange = (info: any) => {
         if (info.file.type === FILE_TYPE.ZIP) {
             var status = info.file.status;
-            if (status === 'uploading') {
-                this.setState({ uploadingZIPFile: true });
-            } else {
-                this.setState({
-                    uploadingZIPFile: false,
-                    msgImportZIP: ''
-                });
+            switch (this.state.tabKey) {
+                case TAB_KEY.MULTIPLE:
+                    if (status === 'uploading') {
+                        this.setState({ uploadingMultipleZIPFile: true });
+                    } else {
+                        this.setState({
+                            uploadingMultipleZIPFile: false,
+                            msgImportMultipleZIP: ''
+                        });
+                    }
+                    break;
+                case TAB_KEY.SINGLE:
+                    if (status === 'uploading') {
+                        this.setState({ uploadingSingleZIPFile: true });
+                    } else {
+                        this.setState({
+                            uploadingSingleZIPFile: false,
+                            msgImportSingleZIP: ''
+                        });
+                    }
+                    break;
             }
         }
     }
@@ -169,14 +204,29 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                 };
                 importUsers.push(user);
             });
-            var createUsers = {
-                users: importUsers,
-                zipFile: this.state.zipFile
-            };
             var csvFile = this.state.csvFile;
-            var zipFile = this.state.zipFile;
-            this.props.requestCreateUsers(zipFile, csvFile);
+            var zipFile = this.state.multipleZipFile;
+            this.props.requestCreateMultipleUsers(zipFile, csvFile);
         }
+    }
+
+    private createSingleUser = (e: any) => {
+        e.preventDefault();
+        var isUpLoadZipFile = this.state.singleZipFile.name !== 'Null';
+        if(!isUpLoadZipFile) {
+            this.setState({ msgImportSingleZIP: ERR_MESSAGE.REQUIRED_ZIP_FILE });
+        }
+        this.props.form.validateFields((err: any, values: any) => {
+            if (!err && isUpLoadZipFile) {
+                var user = {
+                    email: values.email,
+                    rollNumber: values.rollNumber,
+                    fullname: values.fullname
+                };
+                var zipFile = this.state.singleZipFile;
+                this.props.requestCreateSingleUser(zipFile, user);
+            }
+        });
     }
 
     private validateData = () => {
@@ -185,8 +235,8 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
             this.setState({ msgImportCSV: ERR_MESSAGE.REQUIRED_CSV_FILE });
             result = false;
         }
-        if (this.state.zipFile.name === 'Null') {
-            this.setState({ msgImportZIP: ERR_MESSAGE.REQUIRED_ZIP_FILE });
+        if (this.state.multipleZipFile.name === 'Null') {
+            this.setState({ msgImportMultipleZIP: ERR_MESSAGE.REQUIRED_ZIP_FILE });
             result = false;
         }
         if (this.state.csvFile.name === 'Null') {
@@ -241,6 +291,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                 width: '30%'
             }
         ];
+        const { getFieldDecorator } = this.props.form;
         return (
             this.state.tabKey === TAB_KEY.MULTIPLE ?
                 (
@@ -294,7 +345,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                     onChange={this.onZipFileChange}
                                 >
                                     <p className="ant-upload-drag-icon">
-                                        {this.state.uploadingZIPFile === true ?
+                                        {this.state.uploadingMultipleZIPFile === true ?
                                             (<Icon type="loading" />) :
                                             (<Icon type="inbox" />)
                                         }
@@ -304,17 +355,17 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                 </Dragger>
                             </Col>
                             <Col span={15} offset={1}>
-                                {this.state.msgImportZIP.length === 0 ?
+                                {this.state.msgImportMultipleZIP.length === 0 ?
                                     (
                                         <div>
                                             <Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" />
-                                            <Text type="secondary"> {this.state.zipFile.name}</Text>
+                                            <Text type="secondary"> {this.state.multipleZipFile.name}</Text>
                                         </div>
                                     ) :
-                                    this.state.msgImportZIP.length !== 1 ?
+                                    this.state.msgImportMultipleZIP.length !== 1 ?
                                         (<Icon type="close-circle" theme="twoTone" twoToneColor="#ff0000" />) : null
                                 }
-                                <Text type="danger"> {this.state.msgImportZIP}</Text>
+                                <Text type="danger"> {this.state.msgImportMultipleZIP}</Text>
                             </Col>
                         </Row>
                         <Row>
@@ -330,13 +381,34 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                             <Col span={14}>
                                 <Form labelCol={{ span: 4 }} wrapperCol={{ span: 10 }}>
                                     <Form.Item label="Email" required>
-                                        <Input />
+                                        {getFieldDecorator('email', {
+                                            rules: [
+                                                { required: true, message: 'Please input email' },
+                                                { type: 'email', message: 'The input is not valid E-mail' }
+                                            ],
+                                        })(
+                                            <Input type="email" />
+                                        )}
                                     </Form.Item>
                                     <Form.Item label="Roll number" required>
-                                        <Input />
+                                        {getFieldDecorator('rollNumber', {
+                                            rules: [
+                                                { required: true, message: 'Please input rollnumber' },
+                                                { min: 3, max: 10, message: 'Roll number requires 3-10 characters' }
+                                            ],
+                                        })(
+                                            <Input type="text" />
+                                        )}
                                     </Form.Item>
                                     <Form.Item label="Fullname" required>
-                                        <Input />
+                                        {getFieldDecorator('fullname', {
+                                            rules: [
+                                                { required: true, message: 'Please input fullname' },
+                                                { min: 3, max: 50, message: 'Fullname requires 3-50 characters' }
+                                            ],
+                                        })(
+                                            <Input type="text" />
+                                        )}
                                     </Form.Item>
                                 </Form>
                             </Col>
@@ -345,18 +417,39 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                             <Col span={8}>
                                 <Dragger
                                     multiple={false}
+                                    accept=".zip"
+                                    showUploadList={false}
+                                    beforeUpload={(file: File) => this.validateBeforeUpload(file, FILE_TYPE.ZIP)}
+                                    onChange={this.onZipFileChange}
                                 >
                                     <p className="ant-upload-drag-icon">
-                                        <Icon type="inbox" />
+                                        {this.state.uploadingSingleZIPFile === true ?
+                                            (<Icon type="loading" />) :
+                                            (<Icon type="inbox" />)
+                                        }
                                     </p>
                                     <p className="ant-upload-text">Click or drag file to this area to upload</p>
                                     <p className="ant-upload-hint">Only support for .zip file</p>
                                 </Dragger>
                             </Col>
+                            <Col span={15} offset={1}>
+                                {this.state.msgImportSingleZIP.length === 0 ?
+                                    (
+                                        <div>
+                                            <Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" />
+                                            <Text type="secondary"> {this.state.singleZipFile.name}</Text>
+                                        </div>
+                                    ) :
+                                    this.state.msgImportSingleZIP.length !== 1 ?
+                                        (<Icon type="close-circle" theme="twoTone" twoToneColor="#ff0000" />) : null
+                                }
+                                <Text type="danger"> {this.state.msgImportSingleZIP}</Text>
+                            </Col>
                         </Row>
                         <Row>
                             <Col span={8}>
-                                <Button type="primary" style={{ width: '100%' }}>Save</Button>
+                                <Button type="primary" style={{ width: '100%' }}
+                                    onClick={this.createSingleUser}>Save</Button>
                             </Col>
                         </Row>
                     </div>
@@ -369,4 +462,5 @@ const matchDispatchToProps = (dispatch: any) => {
     return bindActionCreators(userActionCreators, dispatch);
 }
 
-export default connect((state: ApplicationState) => ({ ...state.user }), matchDispatchToProps)(NewUser);
+export default Form.create({ name: 'create_single_use' })
+    (connect((state: ApplicationState) => ({ ...state.user }), matchDispatchToProps)(NewUser));

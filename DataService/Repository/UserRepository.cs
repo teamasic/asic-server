@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataService.Repository
 {
@@ -11,6 +12,7 @@ namespace DataService.Repository
     {
         User GetUserByUsername(string username);
         bool AddRangeIfNotInDb(List<User> users);
+        Task<User> AddIfNotInDb(User user);
         bool IsExisted(string username);
     }
 
@@ -18,6 +20,17 @@ namespace DataService.Repository
     {
         public UserRepository(DbContext dbContext) : base(dbContext)
         {
+        }
+
+        public async Task<User> AddIfNotInDb(User user)
+        {
+            var userInDb = GetUserByUsername(user.Username);
+            if(userInDb == null)
+            {
+                userInDb = user;
+                await AddAsync(userInDb);
+            }
+            return userInDb;
         }
 
         public bool AddRangeIfNotInDb(List<User> users)

@@ -29,7 +29,8 @@ namespace DataService.Service.UserService
         Task<AccessTokenResponse> Authenticate(UserAuthentication user);
         Task<AccessTokenResponse> Register(RegisteredUser user);
         //Task<AccessTokenResponse> RegisterExternalUsingFirebaseAsync(FirebaseRegisterExternal external);
-        List<string> CreateUsers(IFormFile csvFile, IFormFile zipFile);
+        List<string> CreateMultipleUsers(IFormFile csvFile, IFormFile zipFile);
+        Task<bool> CreateSingleUser(IFormFile zipFile, CreateUser user);
     }
 
     public class UserService : BaseService<User>, IUserService
@@ -228,7 +229,7 @@ namespace DataService.Service.UserService
             }
         }
 
-        public List<string> CreateUsers(IFormFile csvFile, IFormFile zipFile)
+        public List<string> CreateMultipleUsers(IFormFile csvFile, IFormFile zipFile)
         {
             var stream = csvFile.OpenReadStream();
             TextReader textReader = new StreamReader(stream);
@@ -269,6 +270,31 @@ namespace DataService.Service.UserService
             {
                 userStreams.Add(user.RollNumber, new List<ZipArchiveEntry>());
             }
+
+            using (ZipArchive archive = new ZipArchive(zipStream))
+            {
+                foreach (var entry in archive.Entries)
+                {
+                    var fileName = entry.FullName.Split('/');
+                    var archiveEntry = new List<ZipArchiveEntry>();
+                    if (userStreams.ContainsKey(fileName[0]))
+                    {
+                        if (fileName[1].Length == 0 || (fileName[1].Length > 0 && IsImageFile(fileName[1])))
+                        {
+                            userStreams.TryGetValue(fileName[0], out archiveEntry);
+                            archiveEntry.Add(entry);
+                        }
+                    }
+                }
+                ExtrectToFile(userStreams.Values);
+            }
+            return userStreams;
+        }
+
+        private Dictionary<string, List<ZipArchiveEntry>> UnZip(Stream zipStream, User user)
+        {
+            var userStreams = new Dictionary<string, List<ZipArchiveEntry>>();
+            userStreams.Add(user.RollNumber, new List<ZipArchiveEntry>());
 
             using (ZipArchive archive = new ZipArchive(zipStream))
             {
@@ -332,6 +358,26 @@ namespace DataService.Service.UserService
             return fileName.EndsWith(".tif", StringComparison.OrdinalIgnoreCase)
                 || fileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
                 || fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public async Task<bool> CreateSingleUser(IFormFile zipFile, CreateUser user)
+        {
+            var newUser = new User()
+            {
+                Username = user.Email,
+                Email = user.Email,
+                Fullname = user.Fullname,
+                RollNumber = user.RollNumber
+            };
+            newUser.UserRole.Add(new UserRole()
+            {
+                RoleId = (int)RolesEnum.ATTENDEE
+            });
+            var userInDb = await repository.AddIfNotInDb(newUser);
+            var dictionary = UnZip(zipFile.OpenReadStream(), userInDb);
+            var listImages = new List<ZipArchiveEntry>();
+            dictionary.TryGetValue(userInDb.RollNumber, out listImages);
+            return listImages.Count > 0;
         }
     }
 }

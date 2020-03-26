@@ -5,8 +5,9 @@ import { AnyAction } from "redux";
 import UserLogin from "../../models/UserLogin";
 import { constants } from "../../constants/constant";
 import { UserLoginResponse } from "../../models/UserLoginResponse";
-import { login, createUsers } from "../../services/User";
+import { login, createMultipleUsers, createSingleUser } from "../../services/User";
 import { error, success, warning } from "../../utils";
+import CreateUser from "../../models/CreateUser";
 
 export const ACTIONS = {
     START_REQUEST_LOGIN:"START_REQUEST_LOGIN",
@@ -50,8 +51,8 @@ const requestLogin = (userLogin: UserLogin, redirect: Function): AppThunkAction 
     }
 }
 
-const requestCreateUsers = (zipFile: File, csvFile: File): AppThunkAction => async (dispatch, getState) => {
-    const apiResponse: ApiResponse = await createUsers(zipFile, csvFile);
+const requestCreateMultipleUsers = (zipFile: File, csvFile: File): AppThunkAction => async (dispatch, getState) => {
+    const apiResponse: ApiResponse = await createMultipleUsers(zipFile, csvFile);
     if(apiResponse.success) {
         var result = apiResponse.data;
         if(result.length > 0) {
@@ -68,7 +69,22 @@ const requestCreateUsers = (zipFile: File, csvFile: File): AppThunkAction => asy
     }
 }
 
+const requestCreateSingleUser = (zipFile: File, user: CreateUser): AppThunkAction => async (dispatch, getState) => {
+    var apiResponse: ApiResponse = await createSingleUser(zipFile, user);
+    if(apiResponse.success) {
+        var result = apiResponse.data;
+        if(result) {
+            success("Create user successfully!");
+        } else {
+            warning("User is saved without image!");
+        }
+    } else {
+        console.log(apiResponse.errors);        
+    }
+}
+
 export const userActionCreators = {
     requestLogin: requestLogin,
-    requestCreateUsers: requestCreateUsers
+    requestCreateMultipleUsers: requestCreateMultipleUsers,
+    requestCreateSingleUser: requestCreateSingleUser
 };

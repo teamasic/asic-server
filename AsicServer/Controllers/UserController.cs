@@ -51,13 +51,23 @@ namespace AsicServer.Controllers
         //    });
         //}
 
-        [HttpPost]
+        [HttpPost("multiple")]
         public async Task<dynamic> CreateMultipleUsers(IFormFile zipFile, IFormFile users)
         {
             return await ExecuteInMonitoring(async () =>
             {
-                var userWithoutImages = service.CreateUsers(users, zipFile);
+                var userWithoutImages = service.CreateMultipleUsers(users, zipFile);
                 return userWithoutImages;
+            });
+        }
+
+        [HttpPost("single")]
+        public async Task<dynamic> CreateSingleUsers(IFormFile zipFile, [FromQuery] CreateUser user)
+        {
+            return await ExecuteInMonitoring(async () =>
+            {
+                var result = service.CreateSingleUser(zipFile, user).Result;
+                return result;
             });
         }
 
