@@ -51,32 +51,27 @@ const requestLogin = (userLogin: UserLogin, redirect: Function): AppThunkAction 
     }
 }
 
-const requestCreateMultipleUsers = (zipFile: File, csvFile: File): AppThunkAction => async (dispatch, getState) => {
+const requestCreateMultipleUsers = (zipFile: File, csvFile: File, resetUsersTable: Function): AppThunkAction => async (dispatch, getState) => {
     const apiResponse: ApiResponse = await createMultipleUsers(zipFile, csvFile);
     if(apiResponse.success) {
         var result = apiResponse.data;
-        if(result.length > 0) {
-            var msg = "These " + result.length + " users is saved without images: ";
-            result.forEach((rollnumber: string) => {
-                msg += rollnumber + " ";
-            });
-            warning(msg);
-        } else {
-            success("Save users successfully!");
-        }
+        console.log(result);
+        resetUsersTable(result);
     } else {
         console.log(apiResponse.errors);
     }
 }
 
-const requestCreateSingleUser = (zipFile: File, user: CreateUser): AppThunkAction => async (dispatch, getState) => {
+const requestCreateSingleUser = (zipFile: File, user: CreateUser, createUserSuccess: Function, createUserWithError: Function): AppThunkAction => async (dispatch, getState) => {
     var apiResponse: ApiResponse = await createSingleUser(zipFile, user);
     if(apiResponse.success) {
         var result = apiResponse.data;
         if(result) {
             success("Create user successfully!");
+            createUserSuccess();
         } else {
             warning("User is saved without image!");
+            createUserWithError();
         }
     } else {
         console.log(apiResponse.errors);        
@@ -87,6 +82,9 @@ const requestUserByEmail = (email: string, getSuccess: Function): AppThunkAction
     var apiResponse: ApiResponse = await getUserByEmail(email);
     if(apiResponse.success) {
         getSuccess(apiResponse.data);
+    } else {
+        getSuccess(null);
+        console.log(apiResponse.errors);
     }
 }
 

@@ -27,7 +27,8 @@ export const createSingleUser = async (zipFile: File, user: CreateUser): Promise
         params: {
             Email: user.email,
             RollNumber: user.rollNumber,
-            Fullname: user.fullname
+            Fullname: user.fullname,
+            Image: user.image
         }
     });
     return await response.data;

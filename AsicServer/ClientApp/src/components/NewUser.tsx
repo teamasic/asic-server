@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { Card, Upload, Button, Icon, Row, Col, Table, Form, Input } from 'antd'
+import { Card, Upload, Button, Icon, Row, Col, Table, Form, Input, Tooltip, Spin } from 'antd'
 import { renderStripedTable } from '../utils';
 import Text from 'antd/lib/typography/Text';
 import { parse } from 'papaparse';
@@ -9,6 +9,7 @@ import { userActionCreators } from '../store/user/userActionCreators';
 import { bindActionCreators } from 'redux';
 import { ApplicationState } from '../store';
 import { FormComponentProps } from 'antd/lib/form';
+import User from '../models/User';
 
 const { Dragger } = Upload;
 
@@ -53,7 +54,10 @@ interface ComponentState {
     uploadingSingleZIPFile: boolean,
     multipleZipFile: File,
     singleZipFile: File,
-    csvFile: File
+    csvFile: File,
+    user: any, 
+    creatingMultipleUsers: boolean,
+    creatingSingleUser: boolean
 }
 
 type Props = typeof userActionCreators // ... plus action creators we've requested
@@ -74,7 +78,10 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
             uploadingSingleZIPFile: false,
             multipleZipFile: new File([], 'Null'),
             singleZipFile: new File([], 'Null'),
-            csvFile: new File([], 'Null')
+            csvFile: new File([], 'Null'),
+            user: null,
+            creatingMultipleUsers: false,
+            creatingSingleUser: false
         }
     }
 
@@ -152,11 +159,12 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
     }
 
     private checkValidCSVFileFormat = (users: []) => {
-        let temp: { Email: string, RollNumber: string, Fullname: string }[] = users;
+        let temp: { email: string, rollNumber: string, fullname: string, image: string }[] = users;
         if (temp.length > 0) {
-            if (!isNullOrUndefined(temp[0].Email)
-                && !isNullOrUndefined(temp[0].RollNumber)
-                && !isNullOrUndefined(temp[0].Fullname)) {
+            if (!isNullOrUndefined(temp[0].email)
+                && !isNullOrUndefined(temp[0].rollNumber)
+                && !isNullOrUndefined(temp[0].fullname)
+                && !isNullOrUndefined(temp[0].image)) {
                 return true;
             }
         }
@@ -193,6 +201,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
 
     private createMultipleUsers = () => {
         if (this.validateData()) {
+            this.setState({creatingMultipleUsers: true});
             var users = this.state.importUsers;
             var importUsers = new Array(0);
             users.forEach((item: any) => {
@@ -200,33 +209,54 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                     email: item.Email,
                     username: item.Email,
                     fullname: item.Fullname,
-                    rollnumber: item.RollNumber
+                    rollnumber: item.RollNumber,
+                    image: item.Image
                 };
                 importUsers.push(user);
             });
             var csvFile = this.state.csvFile;
             var zipFile = this.state.multipleZipFile;
-            this.props.requestCreateMultipleUsers(zipFile, csvFile);
+            this.props.requestCreateMultipleUsers(zipFile, csvFile, this.resetUsersTable);
         }
     }
 
     private createSingleUser = (e: any) => {
         e.preventDefault();
         var isUpLoadZipFile = this.state.singleZipFile.name !== 'Null';
-        if(!isUpLoadZipFile) {
+        if (!isUpLoadZipFile) {
             this.setState({ msgImportSingleZIP: ERR_MESSAGE.REQUIRED_ZIP_FILE });
         }
         this.props.form.validateFields((err: any, values: any) => {
             if (!err && isUpLoadZipFile) {
+                this.setState({creatingSingleUser: true});
                 var user = {
                     email: values.email,
                     rollNumber: values.rollNumber,
-                    fullname: values.fullname
+                    fullname: values.fullname,
+                    image: values.image
                 };
                 var zipFile = this.state.singleZipFile;
-                this.props.requestCreateSingleUser(zipFile, user);
+                this.props.requestCreateSingleUser(zipFile, user, this.createSingleUserSuccess, this.createSingleUserWithError);
             }
         });
+    }
+
+    private createSingleUserSuccess = () => {
+        this.setState({
+            singleZipFile: new File([], 'Null'),
+            creatingSingleUser: false
+        });
+        this.props.form.setFieldsValue({
+            email: '',
+            rollNumber: '',
+            fullname: '',
+            image: ''
+        });
+        this.setUser(null);
+    }
+
+    private createSingleUserWithError = () => {
+        this.setState({creatingSingleUser: false});
     }
 
     private validateData = () => {
@@ -246,9 +276,37 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
         return result;
     }
 
-    private onEmailBlur = (value: string) => {
-        console.log(value);
-        
+    private onEmailBlur = (e: any) => {
+        var email = e.target.value;
+        if (email.length > 0) {
+            this.props.requestUserByEmail(email, this.setUser);
+        }
+    }
+
+    private setUser = (user: any) => {
+        this.setState({
+            user: user
+        });
+        if (!isNullOrUndefined(user)) {
+            this.props.form.setFieldsValue({
+                rollNumber: user.rollNumber,
+                fullname: user.fullname,
+                image: user.image
+            });
+        } else {
+            this.props.form.setFieldsValue({
+                rollNumber: '',
+                fullname: '',
+                image: ''
+            });
+        }
+    }
+
+    private resetUsersTable = (data: any) => {
+        this.setState({ 
+            importUsers: data,
+            creatingMultipleUsers: false
+        });
     }
 
     render() {
@@ -280,27 +338,52 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
             {
                 title: 'Email',
                 key: 'email',
-                dataIndex: 'Email',
-                width: '40%'
+                dataIndex: 'email',
+                width: '30%',
+                render: (text: any, record: any, index: number) => {
+                    if (isNullOrUndefined(record.noImageSaved)) {
+                        return text;
+                    }
+                    return (
+                        <span>
+                            {record.noImageSaved > 0 ?
+                                (<span>{text} <Tooltip title="Saved user successfully!">
+                                    <Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" />
+                                </Tooltip>
+                                </span>) :
+                                (<span>{text} <Tooltip title="User is saved without images">
+                                    <Icon type="info-circle" theme="twoTone" twoToneColor="#faad14" />
+                                </Tooltip>
+                                </span>)}
+                        </span>
+                    );
+                }
             },
             {
                 title: 'Roll number',
                 key: 'rollNumber',
-                dataIndex: 'RollNumber',
-                width: '25%'
+                dataIndex: 'rollNumber',
+                width: '20%'
             },
             {
                 title: 'Fullname',
                 key: 'fullname',
-                dataIndex: 'Fullname',
+                dataIndex: 'fullname',
                 width: '30%'
+            },
+            {
+                title: 'Image',
+                key: 'image',
+                dataIndex: 'image',
+                width: '15%',
+                ellipsis: true
             }
         ];
         const { getFieldDecorator } = this.props.form;
         return (
             this.state.tabKey === TAB_KEY.MULTIPLE ?
                 (
-                    <div>
+                    <Spin spinning={this.state.creatingMultipleUsers}>
                         <Row style={{ marginBottom: 10 }}>
                             <Col span={4}>
                                 <Upload
@@ -329,7 +412,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                         <Row style={{ marginBottom: 10 }}>
                             <Table dataSource={this.state.importUsers}
                                 columns={columns}
-                                rowKey="Email"
+                                rowKey="email"
                                 bordered
                                 rowClassName={renderStripedTable}
                                 pagination={{
@@ -378,13 +461,13 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                 <Button type="primary" style={{ width: '100%' }} onClick={this.createMultipleUsers}>Save</Button>
                             </Col>
                         </Row>
-                    </div>
+                    </Spin>
                 ) :
                 (
-                    <div>
+                    <Spin spinning={this.state.creatingSingleUser}>
                         <Row style={{ marginBottom: 10 }}>
-                            <Col span={14}>
-                                <Form labelCol={{ span: 4 }} wrapperCol={{ span: 10 }}>
+                            <Col span={14} offset={4}>
+                                <Form labelCol={{ span: 8 }} wrapperCol={{ span: 12 }}>
                                     <Form.Item label="Email" required>
                                         {getFieldDecorator('email', {
                                             rules: [
@@ -392,17 +475,17 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                                 { type: 'email', message: 'The input is not valid E-mail' }
                                             ],
                                         })(
-                                            <Input type="email"/>
+                                            <Input type="email" onBlur={this.onEmailBlur} />
                                         )}
                                     </Form.Item>
                                     <Form.Item label="Roll number" required>
                                         {getFieldDecorator('rollNumber', {
                                             rules: [
-                                                { required: true, message: 'Please input rollnumber' },
+                                                { required: true, message: 'Please input roll number' },
                                                 { min: 3, max: 10, message: 'Roll number requires 3-10 characters' }
                                             ],
                                         })(
-                                            <Input type="text"/>
+                                            <Input type="text" disabled={this.state.user != null} />
                                         )}
                                     </Form.Item>
                                     <Form.Item label="Fullname" required>
@@ -412,14 +495,24 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                                 { min: 3, max: 50, message: 'Fullname requires 3-50 characters' }
                                             ],
                                         })(
-                                            <Input type="text" />
+                                            <Input type="text" disabled={this.state.user != null} />
+                                        )}
+                                    </Form.Item>
+                                    <Form.Item label="Image" required>
+                                        {getFieldDecorator('image', {
+                                            rules: [
+                                                { required: true, message: 'Please input image' },
+                                                { min: 3, max: 100, message: 'Fullname requires 3-100 characters' }
+                                            ],
+                                        })(
+                                            <Input type="text" disabled={this.state.user != null} />
                                         )}
                                     </Form.Item>
                                 </Form>
                             </Col>
                         </Row>
                         <Row style={{ marginBottom: 10 }}>
-                            <Col span={8}>
+                            <Col span={8} offset={8}>
                                 <Dragger
                                     multiple={false}
                                     accept=".zip"
@@ -437,7 +530,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                     <p className="ant-upload-hint">Only support for .zip file</p>
                                 </Dragger>
                             </Col>
-                            <Col span={15} offset={1}>
+                            <Col span={7} offset={1}>
                                 {this.state.msgImportSingleZIP.length === 0 ?
                                     (
                                         <div>
@@ -452,12 +545,12 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                             </Col>
                         </Row>
                         <Row>
-                            <Col span={8}>
+                            <Col span={8} offset={8}>
                                 <Button type="primary" style={{ width: '100%' }}
                                     onClick={this.createSingleUser}>Save</Button>
                             </Col>
                         </Row>
-                    </div>
+                    </Spin>
                 )
         );
     }

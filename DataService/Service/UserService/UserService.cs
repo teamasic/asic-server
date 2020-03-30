@@ -29,7 +29,7 @@ namespace DataService.Service.UserService
         Task<AccessTokenResponse> Authenticate(UserAuthentication user);
         Task<AccessTokenResponse> Register(RegisteredUser user);
         //Task<AccessTokenResponse> RegisterExternalUsingFirebaseAsync(FirebaseRegisterExternal external);
-        List<string> CreateMultipleUsers(IFormFile csvFile, IFormFile zipFile);
+        List<CreateUsersResponse> CreateMultipleUsers(IFormFile csvFile, IFormFile zipFile);
         Task<bool> CreateSingleUser(IFormFile zipFile, CreateUser user);
         UserViewModel GetByEmail(string email);
     }
@@ -231,7 +231,7 @@ namespace DataService.Service.UserService
             }
         }
 
-        public List<string> CreateMultipleUsers(IFormFile csvFile, IFormFile zipFile)
+        public List<CreateUsersResponse> CreateMultipleUsers(IFormFile csvFile, IFormFile zipFile)
         {
             var stream = csvFile.OpenReadStream();
             TextReader textReader = new StreamReader(stream);
@@ -246,7 +246,8 @@ namespace DataService.Service.UserService
                         Username = user.Email,
                         Email = user.Email,
                         Fullname = user.Fullname,
-                        RollNumber = user.RollNumber
+                        RollNumber = user.RollNumber,
+                        Image = user.Image
                     };
                     newUser.UserRole.Add(new UserRole()
                     {
@@ -257,8 +258,8 @@ namespace DataService.Service.UserService
                 if (repository.AddRangeIfNotInDb(newUsers))
                 {
                     var userEntries = UnZip(zipFile.OpenReadStream(), newUsers);
-                    var userWithoutImage = GetUsersWithoutImage(userEntries);
-                    return userWithoutImage;
+                    var response = GetUsersWithNumberOfImagesSaved(userEntries, newUsers);
+                    return response;
                 }
                 else
                     throw new BaseException(HttpStatusCode.BadRequest, ErrorMessage.INVALID_USERS);
@@ -342,17 +343,27 @@ namespace DataService.Service.UserService
             }
         }
 
-        private List<string> GetUsersWithoutImage(Dictionary<string, List<ZipArchiveEntry>> users)
+        private List<CreateUsersResponse> GetUsersWithNumberOfImagesSaved(Dictionary<string, List<ZipArchiveEntry>> users, List<User> usersInDB)
         {
-            var usersWithOutImage = new List<string>();
-            foreach (var user in users)
+            var results = new List<CreateUsersResponse>();
+            foreach (var user in usersInDB)
             {
-                if(user.Value.Count == 0)
+                if(users.ContainsKey(user.RollNumber))
                 {
-                    usersWithOutImage.Add(user.Key);
+                    var listImages = new List<ZipArchiveEntry>();
+                    users.TryGetValue(user.RollNumber, out listImages);
+                    var result = new CreateUsersResponse()
+                    {
+                        Email = user.Email,
+                        RollNumber = user.RollNumber,
+                        Fullname = user.Fullname,
+                        Image = user.Image,
+                        NoImageSaved = listImages.Count
+                    };
+                    results.Add(result);
                 }
             }
-            return usersWithOutImage;
+            return results;
         }
 
         private bool IsImageFile(string fileName)
@@ -369,7 +380,8 @@ namespace DataService.Service.UserService
                 Username = user.Email,
                 Email = user.Email,
                 Fullname = user.Fullname,
-                RollNumber = user.RollNumber
+                RollNumber = user.RollNumber,
+                Image = user.Image
             };
             newUser.UserRole.Add(new UserRole()
             {
