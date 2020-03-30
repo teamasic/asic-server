@@ -9,10 +9,13 @@
     [Email]        VARCHAR (255)   NULL,
     [Address]      NVARCHAR (255)  NULL,
     [Birthdate]    DATETIME        NULL,
+    [Image]        VARCHAR (MAX)   NULL,
     CONSTRAINT [PK_Account] PRIMARY KEY CLUSTERED ([Id] ASC),
     CONSTRAINT [IX_Account] UNIQUE NONCLUSTERED ([Username] ASC),
     CONSTRAINT [UK_RollNumber_Account] UNIQUE NONCLUSTERED ([RollNumber] ASC)
 );
+
+
 
 
 

@@ -32,6 +32,7 @@ using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
 using Microsoft.OpenApi.Models;
 using DataService.Service.UserService;
+using DataService.Service.RecordService;
 
 namespace AsicServer
 {
@@ -87,7 +88,7 @@ namespace AsicServer
         {
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "ASIC API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Server ASIC API", Version = "v1" });
 
                 var scheme = new OpenApiSecurityScheme()
                 {
@@ -159,6 +160,8 @@ namespace AsicServer
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IDataSetService, DataSetService>();
             services.AddScoped<IDataSetRepository, DataSetRepository>();
+            services.AddScoped<IRecordService, RecordService>();
+            services.AddScoped<IRecordStagingRepository, RecordStagingRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -186,7 +189,7 @@ namespace AsicServer
             app.UseAuthentication();
 
             app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ASIC API"));
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Server ASIC API"));
 
             app.UseRouting();
             app.UseAuthorization(); //the middleware is set between app.UseRouting and app.UseEndpoints
@@ -197,6 +200,8 @@ namespace AsicServer
                     pattern: "{controller}/{action=Index}/{id?}");
             });
 
+            loggerFactory.AddFile("Logs/server-log-{Date}.txt");
+
             //app.UseSpa(spa =>
             //{
             //    spa.Options.SourcePath = "ClientApp";
@@ -206,7 +211,6 @@ namespace AsicServer
             //        spa.UseReactDevelopmentServer(npmScript: "start");
             //    }
             //});
-            //loggerFactory.AddLog4Net();
 
         }
     }

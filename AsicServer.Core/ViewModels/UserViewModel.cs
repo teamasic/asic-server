@@ -15,5 +15,6 @@ namespace AsicServer.Core.ViewModels
         public string Email { get; set; }
         public string Address { get; set; }
         public DateTime? Birthdate { get; set; }
+        public string Image { get; set; }
     }
 }
