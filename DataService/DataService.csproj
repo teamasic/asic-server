@@ -25,8 +25,4 @@
     <ProjectReference Include="..\AsicServer.Core\AsicServer.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Service\RecordService\" />
-  </ItemGroup>
-
 </Project>

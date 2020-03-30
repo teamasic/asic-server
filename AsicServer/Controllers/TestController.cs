@@ -6,6 +6,7 @@ using AsicServer.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace AsicServer.Controllers
 {
@@ -13,21 +14,25 @@ namespace AsicServer.Controllers
     [ApiController]
     public class TestController : BaseController
     {
-        public TestController(ExtensionSettings extensionSettings) : base(extensionSettings)
+        private ILogger<TestController> logger;
+        public TestController(ExtensionSettings extensionSettings, ILogger<TestController> logger) : base(extensionSettings)
         {
+            this.logger = logger;
         }
 
         [HttpPost("log")]
-        public void PostLog(string value)
+        public void PostLog()
         {
-            Logger.Debug(value);
+            logger.LogInformation("This is log infomation");
+            logger.LogDebug("This is log debug");
+            logger.LogWarning("This is log warning");
+            logger.LogError("This is log error");
         }
 
         [HttpGet("log")]
         public ActionResult<string> GetLog()
         {
-            var fs = System.IO.File.ReadAllText(@"myapp.log");
-            return fs;
+            throw new NotImplementedException("Not implement this function");
         }
 
         [HttpGet]
@@ -50,21 +55,5 @@ namespace AsicServer.Controllers
             };
         }
 
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
-
-
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
     }
 }

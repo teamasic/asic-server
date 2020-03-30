@@ -210,7 +210,8 @@ namespace DataService.Service.UserService
                         {
                             Email = email,
                             Username = email,
-                            Fullname = name
+                            Fullname = name,
+                            Image = avatar
                         };
                         user.UserRole.Add(new UserRole()
                         {

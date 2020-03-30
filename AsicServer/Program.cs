@@ -13,7 +13,12 @@ namespace AsicServer
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            CreateHostBuilder(args).ConfigureLogging((hostingContext, logging) =>
+            {
+                logging.AddConsole();
+                logging.AddDebug();
+                logging.AddEventSourceLogger();
+            }).Build().Run();
         }
 
 

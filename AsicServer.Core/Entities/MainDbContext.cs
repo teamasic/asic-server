@@ -24,6 +24,7 @@ namespace AsicServer.Core.Entities
         public virtual DbSet<Sessions> Sessions { get; set; }
         public virtual DbSet<User> User { get; set; }
         public virtual DbSet<UserRole> UserRole { get; set; }
+        public virtual DbSet<RecordStaging> RecordStaging { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
