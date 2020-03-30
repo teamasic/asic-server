@@ -33,3 +33,11 @@ export const createSingleUser = async (zipFile: File, user: CreateUser): Promise
     return await response.data;
 }
 
+export const getUserByEmail = async (email: string): Promise<ApiResponse> => {
+    var response = await axios.get(baseRoute, {
+        params: {
+            email: email
+        }
+    });
+    return await response.data;
+}

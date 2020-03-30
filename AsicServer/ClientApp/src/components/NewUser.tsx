@@ -246,6 +246,11 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
         return result;
     }
 
+    private onEmailBlur = (value: string) => {
+        console.log(value);
+        
+    }
+
     render() {
         return (
             <div>
@@ -387,7 +392,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                                 { type: 'email', message: 'The input is not valid E-mail' }
                                             ],
                                         })(
-                                            <Input type="email" />
+                                            <Input type="email"/>
                                         )}
                                     </Form.Item>
                                     <Form.Item label="Roll number" required>
@@ -397,7 +402,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                                 { min: 3, max: 10, message: 'Roll number requires 3-10 characters' }
                                             ],
                                         })(
-                                            <Input type="text" />
+                                            <Input type="text"/>
                                         )}
                                     </Form.Item>
                                     <Form.Item label="Fullname" required>

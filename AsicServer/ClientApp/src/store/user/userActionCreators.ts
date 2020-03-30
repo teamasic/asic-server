@@ -5,7 +5,7 @@ import { AnyAction } from "redux";
 import UserLogin from "../../models/UserLogin";
 import { constants } from "../../constants/constant";
 import { UserLoginResponse } from "../../models/UserLoginResponse";
-import { login, createMultipleUsers, createSingleUser } from "../../services/User";
+import { login, createMultipleUsers, createSingleUser, getUserByEmail } from "../../services/User";
 import { error, success, warning } from "../../utils";
 import CreateUser from "../../models/CreateUser";
 
@@ -83,8 +83,16 @@ const requestCreateSingleUser = (zipFile: File, user: CreateUser): AppThunkActio
     }
 }
 
+const requestUserByEmail = (email: string, getSuccess: Function): AppThunkAction => async (dispatch, getState) => {
+    var apiResponse: ApiResponse = await getUserByEmail(email);
+    if(apiResponse.success) {
+        getSuccess(apiResponse.data);
+    }
+}
+
 export const userActionCreators = {
     requestLogin: requestLogin,
     requestCreateMultipleUsers: requestCreateMultipleUsers,
-    requestCreateSingleUser: requestCreateSingleUser
+    requestCreateSingleUser: requestCreateSingleUser,
+    requestUserByEmail: requestUserByEmail
 };
