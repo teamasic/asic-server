@@ -31,6 +31,7 @@ namespace DataService.Service.UserService
         //Task<AccessTokenResponse> RegisterExternalUsingFirebaseAsync(FirebaseRegisterExternal external);
         List<string> CreateMultipleUsers(IFormFile csvFile, IFormFile zipFile);
         Task<bool> CreateSingleUser(IFormFile zipFile, CreateUser user);
+        UserViewModel GetByEmail(string email);
     }
 
     public class UserService : BaseService<User>, IUserService
@@ -378,6 +379,16 @@ namespace DataService.Service.UserService
             var listImages = new List<ZipArchiveEntry>();
             dictionary.TryGetValue(userInDb.RollNumber, out listImages);
             return listImages.Count > 0;
+        }
+
+        public UserViewModel GetByEmail(string email)
+        {
+            var user = repository.GetByEmail(email);
+            if(user != null)
+            {
+                return AutoMapper.Mapper.Map<UserViewModel>(user);
+            }
+            throw new BaseException(HttpStatusCode.NotFound, ErrorMessage.USER_EMAIL_NOT_FOUND, email);
         }
     }
 }

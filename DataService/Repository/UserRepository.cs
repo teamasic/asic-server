@@ -14,6 +14,7 @@ namespace DataService.Repository
         bool AddRangeIfNotInDb(List<User> users);
         Task<User> AddIfNotInDb(User user);
         bool IsExisted(string username);
+        User GetByEmail(string email);
     }
 
     public class UserRepository : BaseRepository<User>, IUserRepository
@@ -51,6 +52,11 @@ namespace DataService.Repository
             }
             dbContext.SaveChanges();
             return true;
+        }
+
+        public User GetByEmail(string email)
+        {
+            return Get(u => u.Email == email).FirstOrDefault();
         }
 
         public User GetByRollNumber(string rollNumber)
