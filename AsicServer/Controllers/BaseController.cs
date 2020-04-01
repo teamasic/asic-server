@@ -59,7 +59,7 @@ namespace AsicServer.Controllers
 
         protected async Task<BaseResponse<T>> ExecuteInMonitoring<T>(Func<Task<T>> function)
         {
-            dynamic result;
+            dynamic result = null;
             try
             {
                 result = await function();

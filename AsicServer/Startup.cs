@@ -116,7 +116,7 @@ namespace AsicServer
             Mapper.Initialize(cfg =>
             {
                 cfg.CreateMap<RegisteredUser, User>();
-                cfg.CreateMap<User, UserViewModel>();
+                cfg.CreateMap<User, UserViewModel>().ReverseMap();
             });
         }
 
@@ -158,8 +158,6 @@ namespace AsicServer
 
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IDataSetService, DataSetService>();
-            services.AddScoped<IDataSetRepository, DataSetRepository>();
             services.AddScoped<IRecordService, RecordService>();
             services.AddScoped<IRecordStagingRepository, RecordStagingRepository>();
         }

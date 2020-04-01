@@ -5,7 +5,9 @@ import { AnyAction } from "redux";
 import UserLogin from "../../models/UserLogin";
 import { constants } from "../../constants/constant";
 import { UserLoginResponse } from "../../models/UserLoginResponse";
-import { login } from "../../services/User";
+import { login, createMultipleUsers, createSingleUser, getUserByEmail } from "../../services/User";
+import { error, success, warning } from "../../utils";
+import CreateUser from "../../models/CreateUser";
 
 export const ACTIONS = {
     START_REQUEST_LOGIN:"START_REQUEST_LOGIN",
@@ -49,6 +51,46 @@ const requestLogin = (userLogin: UserLogin, redirect: Function): AppThunkAction 
     }
 }
 
+const requestCreateMultipleUsers = (zipFile: File, csvFile: File, resetUsersTable: Function): AppThunkAction => async (dispatch, getState) => {
+    const apiResponse: ApiResponse = await createMultipleUsers(zipFile, csvFile);
+    if(apiResponse.success) {
+        var result = apiResponse.data;
+        console.log(result);
+        resetUsersTable(result);
+    } else {
+        console.log(apiResponse.errors);
+    }
+}
+
+const requestCreateSingleUser = (zipFile: File, user: CreateUser, createUserSuccess: Function, createUserWithError: Function): AppThunkAction => async (dispatch, getState) => {
+    var apiResponse: ApiResponse = await createSingleUser(zipFile, user);
+    if(apiResponse.success) {
+        var result = apiResponse.data;
+        if(result) {
+            success("Create user successfully!");
+            createUserSuccess();
+        } else {
+            warning("User is saved without image!");
+            createUserWithError();
+        }
+    } else {
+        console.log(apiResponse.errors);        
+    }
+}
+
+const requestUserByEmail = (email: string, getSuccess: Function): AppThunkAction => async (dispatch, getState) => {
+    var apiResponse: ApiResponse = await getUserByEmail(email);
+    if(apiResponse.success) {
+        getSuccess(apiResponse.data);
+    } else {
+        getSuccess(null);
+        console.log(apiResponse.errors);
+    }
+}
+
 export const userActionCreators = {
-    requestLogin: requestLogin
+    requestLogin: requestLogin,
+    requestCreateMultipleUsers: requestCreateMultipleUsers,
+    requestCreateSingleUser: requestCreateSingleUser,
+    requestUserByEmail: requestUserByEmail
 };

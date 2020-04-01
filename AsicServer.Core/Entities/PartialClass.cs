@@ -34,10 +34,6 @@ namespace AsicServer.Core.Entities
 
     }
 
-    public partial class DataSet : BaseEntity
-    {
-
-    }
     public partial class Records : BaseEntity
     {
 
