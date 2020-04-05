@@ -18,7 +18,8 @@ namespace AsicServer.Core.Constant
         public static string ROLES_EMPTY = "Role cannot be empty";
         public static string ROLES_NOT_EXISTED = "Role is not existed";
 
-
-
+        public static string INVALID_USERS = "Invalid users";
+        public static string USERS_LACK_OF_IMAGES = "Users lack of images";
+        public static string USER_EMAIL_NOT_FOUND = "Cannot find user with email {0}";
     }
 }

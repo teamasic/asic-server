@@ -60,10 +60,21 @@
     <Folder Include="Properties" />
     <Folder Include="dbo\" />
     <Folder Include="dbo\Tables\" />
+    <Folder Include="dbo\Stored Procedures\" />
+    <Folder Include="dbo\User Defined Types\" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\Role.sql" />
     <Build Include="dbo\Tables\User.sql" />
     <Build Include="dbo\Tables\UserRole.sql" />
+    <Build Include="dbo\Tables\Sessions.sql" />
+    <Build Include="dbo\Tables\Rooms.sql" />
+    <Build Include="dbo\Tables\Records.sql" />
+    <Build Include="dbo\Tables\Groups.sql" />
+    <Build Include="dbo\Tables\ChangeRequests.sql" />
+    <Build Include="dbo\Tables\AttendeeGroups.sql" />
+    <Build Include="dbo\Tables\RecordStaging.sql" />
+    <Build Include="dbo\Stored Procedures\MergeRecordStagingInSyncData.sql" />
+    <Build Include="dbo\User Defined Types\IntID.sql" />
   </ItemGroup>
 </Project>

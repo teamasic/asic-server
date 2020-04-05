@@ -15,6 +15,7 @@ const unloadedState: UserState = {
         email: "",
         address: "",
         birthdate: "",
+        image: ""
     },
     roles: [],
     accessToken: ""

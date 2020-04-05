@@ -6,4 +6,5 @@
     email: string;
     address: string,
     birthdate: string,
+    image: string
 }
