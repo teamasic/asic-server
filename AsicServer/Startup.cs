@@ -31,6 +31,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
 using Microsoft.OpenApi.Models;
+using AttendanceSystemIPCamera.Framework.AppSettingConfiguration;
+using AsicServer.Core.Training;
 
 namespace AsicServer
 {
@@ -64,6 +66,7 @@ namespace AsicServer
             SetupAuthentication(services);
             SetupDI(services);
             SetupFirebaseAuthentication(services);
+            SetupMyConfiguration(services);
         }
 
         private void SetupFirebaseAuthentication(IServiceCollection services)
@@ -80,6 +83,11 @@ namespace AsicServer
             {
                 options.UseSqlServer(Configuration.GetConnectionString("AsicServerConn"));
             });
+        }
+        private void SetupMyConfiguration(IServiceCollection services)
+        {
+            services.AddSingleton(Configuration.GetSection("FilesConfiguration").Get<FilesConfiguration>());
+            services.AddSingleton(Configuration.GetSection("MyConfiguration").Get<MyConfiguration>());
         }
 
         private void SetupSwagger(IServiceCollection services)
@@ -156,6 +164,8 @@ namespace AsicServer
 
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<ITrainingService, TrainingService>();
+            services.AddScoped<ProcessStartInfoFactory>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
