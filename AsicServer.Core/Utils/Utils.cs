@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Text;
 
 namespace AsicServer.Core.Utils
@@ -18,5 +19,11 @@ namespace AsicServer.Core.Utils
             return table;
         }
 
+        public static Stream GetFile(string name)
+        {
+            var fileName = Path.Combine(Environment.CurrentDirectory, name);
+            var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return stream;
+        }
     }
 }

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using AttendanceSystemIPCamera.Framework.AppSettingConfiguration;
 using AttendanceSystemIPCamera.Framework.ViewModels;
+using AsicServer.Core.Utils;
 
 namespace AsicServer.Controllers
 {
@@ -34,22 +35,14 @@ namespace AsicServer.Controllers
             Logger.Debug(value);
         }
 
-        private IActionResult GetFile(string name)
+        private IActionResult GetFile(string fileName)
         {
-            var fileName = Path.Combine(Environment.CurrentDirectory, name);
+            var stream = Utils.GetFile(fileName);
             var mimeType = "application/....";
-            try
+            return new FileStreamResult(stream, mimeType)
             {
-                var stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-                return new FileStreamResult(stream, mimeType)
-                {
-                    FileDownloadName = fileName
-                };
-            }
-            catch (Exception e)
-            {
-                return NotFound(e);
-            }
+                FileDownloadName = fileName
+            };
         }
 
         private string GetModelRecognizer()
@@ -62,7 +55,6 @@ namespace AsicServer.Controllers
                 filesConfig.RecognizerModelFile);
             return fileDest;
         }
-
 
         [HttpGet("model")]
         public IActionResult DownloadModelRecognizer()
@@ -91,15 +83,18 @@ namespace AsicServer.Controllers
             return GetFile(filesConfig.SettingsConfigFile);
         }
         [HttpGet("last-updated")]
-        public SettingsViewModel GetLastUpdated()
+        public BaseResponse<SettingsViewModel> GetLastUpdated()
         {
-            return new SettingsViewModel
+            return ExecuteInMonitoring(() =>
             {
-                Model = System.IO.File.GetLastWriteTime(GetModelRecognizer()),
-                Room = System.IO.File.GetLastWriteTime(filesConfig.RoomConfigFile),
-                Others = System.IO.File.GetLastWriteTime(filesConfig.SettingsConfigFile),
-                Unit = System.IO.File.GetLastWriteTime(filesConfig.UnitConfigFile)
-            };
+                return new SettingsViewModel
+                {
+                    Model = System.IO.File.GetLastWriteTime(GetModelRecognizer()),
+                    Room = System.IO.File.GetLastWriteTime(filesConfig.RoomConfigFile),
+                    Others = System.IO.File.GetLastWriteTime(filesConfig.SettingsConfigFile),
+                    Unit = System.IO.File.GetLastWriteTime(filesConfig.UnitConfigFile)
+                };
+            });
         }
     }
 }
