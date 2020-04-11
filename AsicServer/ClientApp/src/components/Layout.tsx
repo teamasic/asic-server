@@ -5,11 +5,20 @@ import { Layout, Menu, Breadcrumb, Icon, Divider, Row, Col } from 'antd';
 import '../styles/Layout.css';
 import { constants } from '../constants/constant';
 import * as firebase from '../firebase';
+import { UserState } from '../store/user/userState';
+import { userActionCreators } from '../store/user/userActionCreators';
+import { ApplicationState } from '../store';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import { Link, withRouter } from 'react-router-dom';
 
 const { Header, Sider, Content, Footer } = Layout;
+type LayoutProps =
+	UserState &
+	typeof userActionCreators; // ... plus incoming routing parameters
 
 class PageLayout extends React.Component<
-	any,
+	LayoutProps,
 	{
 		collapsed: boolean;
 	}
@@ -18,13 +27,16 @@ class PageLayout extends React.Component<
 		collapsed: false
 	};
 
+	constructor(props: LayoutProps) {
+		super(props);
+	}
+
 	onCollapse = (collapsed: boolean) => {
 		this.setState({ collapsed });
 	};
 
 	render() {
-		const authData = localStorage.getItem(constants.AUTH_IN_LOCAL_STORAGE);
-		return (<>{authData ? this.renderLayout() : this.renderEmty()}</>);
+		return (<>{this.props.isLogin ? this.renderLayout() : this.renderEmty()}</>);
 	}
 	private renderLayout() {
 		return (
@@ -45,7 +57,7 @@ class PageLayout extends React.Component<
 							<Icon type="sync" />
 							<span>Refresh</span>
 						</Menu.Item> */}
-						<Menu.Item key="3" onClick={this.logout}>
+						<Menu.Item key="3" onClick={(e) => this.logout()}>
 							<Icon type="logout" />
 							<span>Logout</span>
 						</Menu.Item>
@@ -72,15 +84,22 @@ class PageLayout extends React.Component<
 		);
 	}
 
-	private logout(){
-		const authData = localStorage.getItem(constants.AUTH_IN_LOCAL_STORAGE);
-		if(authData != null){
-			firebase.auth.doSignOut();
-			localStorage.removeItem(constants.AUTH_IN_LOCAL_STORAGE);
-			localStorage.removeItem(constants.ACCESS_TOKEN);
-			window.location.href = "/";
+	private logout() {
+		if (this.props.isLogin) {
+			firebase.auth.doSignOut().then(() => {
+				localStorage.removeItem(constants.AUTH_IN_LOCAL_STORAGE);
+				localStorage.removeItem(constants.ACCESS_TOKEN);
+				this.props.logout();
+			});
 		}
 	}
 }
 
-export default PageLayout;
+export default withRouter(connect(
+	(state: ApplicationState) => ({
+		...state.user
+	}), // Selects which state properties are merged into the component's props
+	dispatch => bindActionCreators({
+		...userActionCreators
+	}, dispatch) // Selects which action creators are merged into the component's props
+)(PageLayout as any));

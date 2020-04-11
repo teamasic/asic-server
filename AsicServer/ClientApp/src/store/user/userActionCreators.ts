@@ -12,7 +12,9 @@ import CreateUser from "../../models/CreateUser";
 export const ACTIONS = {
     START_REQUEST_LOGIN:"START_REQUEST_LOGIN",
     STOP_REQUEST_LOGIN_WITH_ERRORS:"STOP_REQUEST_LOGIN_WITH_ERRORS",
-    RECEIVE_SUCCESS_LOGIN:"RECEIVE_SUCCESS_LOGIN"
+    RECEIVE_SUCCESS_LOGIN:"RECEIVE_SUCCESS_LOGIN",
+    USER_INFO_NOT_IN_LOCAL: "USER_INFO_NOT_IN_LOCAL",
+    LOG_OUT: "LOG_OUT"
 
 }
 
@@ -34,6 +36,26 @@ function receiveSuccessLogin(userLoginResponse: UserLoginResponse) {
         type: ACTIONS.RECEIVE_SUCCESS_LOGIN,
         user: userLoginResponse
     };
+}
+
+function checkUserInfo() {
+    const authData = localStorage.getItem(constants.AUTH_IN_LOCAL_STORAGE);
+    if (authData) {
+        const user = JSON.parse(authData);
+        return {
+            type: ACTIONS.RECEIVE_SUCCESS_LOGIN,
+            user
+        }
+    }
+    return {
+        type: ACTIONS.USER_INFO_NOT_IN_LOCAL
+    }
+}
+
+function logout(){
+    return {
+        type: ACTIONS.LOG_OUT
+    }
 }
 
 const requestLogin = (userLogin: UserLogin, redirect: Function): AppThunkAction => async (dispatch, getState) => {
@@ -92,5 +114,7 @@ export const userActionCreators = {
     requestLogin: requestLogin,
     requestCreateMultipleUsers: requestCreateMultipleUsers,
     requestCreateSingleUser: requestCreateSingleUser,
-    requestUserByEmail: requestUserByEmail
+    requestUserByEmail: requestUserByEmail,
+    checkUserInfo: checkUserInfo,
+    logout: logout,
 };
