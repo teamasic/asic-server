@@ -12,6 +12,9 @@
     [GroupCreateTime]  DATETIME       NULL,
     [MaxSessionCount]  INT            NULL,
     [Present]          BIT            NULL,
+    [IsEnrollInClass]  BIT            NULL,
     CONSTRAINT [PK_RecordStaging] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
+
+
 

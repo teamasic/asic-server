@@ -29,3 +29,11 @@ export const warning = (msg: string) => {
         text: msg
     });
 }
+
+export const getErrors = (errors: any[])=>{
+    const values = []
+    for(const key in errors){
+        values.push(errors[key]);
+    }
+    return values.toString();
+}

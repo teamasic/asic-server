@@ -18,5 +18,6 @@ namespace AsicServer.Core.Entities
         public DateTime? GroupCreateTime { get; set; }
         public int? MaxSessionCount { get; set; }
         public bool? Present { get; set; }
+        public bool? IsEnrollInClass { get; set; }
     }
 }

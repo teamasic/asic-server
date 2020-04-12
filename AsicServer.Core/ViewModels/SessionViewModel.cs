@@ -27,6 +27,6 @@ namespace AsicServer.Core.ViewModels
         public string RtspString { get; set; }
         public string RoomName { get; set; }
         public int GroupId { get; set; }
-        public GroupInSyncData Group { get; set; }
+        
     }
 }
