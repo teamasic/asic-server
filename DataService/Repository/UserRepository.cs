@@ -69,7 +69,7 @@ namespace DataService.Repository
         public User GetUserByUsername(string username)
         {
             var user = this.Get(filter: acc => string.Equals(acc.Username, username), 
-                orderBy: null, "UserRole.Role").FirstOrDefault();
+                orderBy: null, "Role").FirstOrDefault();
             return user;
         }
 

@@ -7,32 +7,39 @@ import Dashboard from './components/Dashboard';
 import 'firebase/auth';
 import { routes } from './constants/routes';
 import Login from './components/Login';
+import { connect } from 'react-redux';
+import { UserState } from './store/user/userState';
+import User from './models/User';
+import { userActionCreators } from './store/user/userActionCreators';
+import { bindActionCreators } from 'redux';
+import { ApplicationState } from './store';
 
-class AppComponent extends React.Component {
+type AppProps=
+    UserState &
+    typeof userActionCreators;
+
+class AppComponent extends React.Component<AppProps> {
 
     constructor(props: any) {
         super(props);
     }
 
-    // public componentDidMount() {
-    //     firebase.auth.onAuthStateChanged(authUser => {
-    //         authUser
-    //             ? this.setState(() => ({ authUser }))
-    //             : this.setState(() => ({ authUser: null }));
-    //     });
-    // }
-
     public render() {
-        const authData = localStorage.getItem(constants.AUTH_IN_LOCAL_STORAGE);
-        if (authData) {
+        if (!this.props.isLogin) {
+            this.props.checkUserInfo();
+        }
+        if (this.props.isLogin) {
+            console.log(this.props.currentUser);
             return (
-                <Layout >
+                <Layout>
+                    <Redirect exact to={routes.DASHBOARD} />
                     <Route exact path={routes.DASHBOARD} component={Dashboard} />
                 </Layout>
             );
         } else {
             return (
-                <Layout >
+                <Layout>
+                    <Redirect exact to={routes.DEFAULT} />
                     <Route exact path={routes.DEFAULT} component={Login} />
                 </Layout>
             );
@@ -41,7 +48,11 @@ class AppComponent extends React.Component {
 }
 
 
-export default AppComponent;
+const matchDispatchToProps = (dispatch: any) => {
+    return bindActionCreators(userActionCreators, dispatch);
+  }
+
+export default connect((state: ApplicationState) => state.user, matchDispatchToProps)(AppComponent);
 
 
 
