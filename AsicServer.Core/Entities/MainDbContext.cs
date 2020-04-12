@@ -36,6 +36,8 @@ namespace AsicServer.Core.Entities
                 entity.HasKey(e => new { e.AttendeeId, e.GroupId })
                     .HasName("sqlite_autoindex_AttendeeGroups_1");
 
+                entity.Property(e => e.IsActive).HasDefaultValueSql("((1))");
+
                 entity.HasOne(d => d.Attendee)
                     .WithMany(p => p.AttendeeGroups)
                     .HasForeignKey(d => d.AttendeeId)
@@ -45,7 +47,7 @@ namespace AsicServer.Core.Entities
                 entity.HasOne(d => d.Group)
                     .WithMany(p => p.AttendeeGroups)
                     .HasForeignKey(d => d.GroupId)
-                    .HasConstraintName("FK_AttendeeGroups_0_0");
+                    .HasConstraintName("FK_AttendeeGroups_Groups");
             });
 
             modelBuilder.Entity<ChangeRequests>(entity =>
@@ -104,6 +106,10 @@ namespace AsicServer.Core.Entities
 
             modelBuilder.Entity<Records>(entity =>
             {
+                entity.HasIndex(e => new { e.AttendeeId, e.GroupId, e.SessionId })
+                    .HasName("UK_Records")
+                    .IsUnique();
+
                 entity.Property(e => e.AttendeeCode)
                     .HasMaxLength(50)
                     .IsUnicode(false);
@@ -114,15 +120,15 @@ namespace AsicServer.Core.Entities
 
                 entity.Property(e => e.StartTime).HasColumnType("datetime");
 
-                entity.HasOne(d => d.Attendee)
-                    .WithMany(p => p.Records)
-                    .HasForeignKey(d => d.AttendeeId)
-                    .HasConstraintName("FK_Records_User");
-
                 entity.HasOne(d => d.Session)
                     .WithMany(p => p.Records)
                     .HasForeignKey(d => d.SessionId)
                     .HasConstraintName("FK_Records_0_0");
+
+                entity.HasOne(d => d.AttendeeGroups)
+                    .WithMany(p => p.Records)
+                    .HasForeignKey(d => new { d.AttendeeId, d.GroupId })
+                    .HasConstraintName("FK_Records_AttendeeGroups");
             });
 
             modelBuilder.Entity<Role>(entity =>
@@ -131,10 +137,6 @@ namespace AsicServer.Core.Entities
                     .HasColumnName("name")
                     .HasMaxLength(100)
                     .IsUnicode(false);
-
-                entity.HasMany(d => d.User)
-                .WithOne(d => d.Role);
-
             });
 
             modelBuilder.Entity<Rooms>(entity =>
@@ -205,8 +207,10 @@ namespace AsicServer.Core.Entities
                 entity.HasOne(d => d.Role)
                     .WithMany(p => p.User)
                     .HasForeignKey(d => d.RoleId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_User_Role");
             });
+
         }
     }
 }

@@ -23,7 +23,10 @@ namespace AsicServer.Core.ViewModels
         [Required]
         public SessionInSyncData Session { get; set; }
         [Required]
+        public GroupInSyncData Group { get; set; }
+        [Required]
         public bool Present { get; set; }
+        public bool IsEnrollInClass { get; set; } = true;
     }
 
     public class RecordStagingViewModel

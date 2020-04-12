@@ -8,7 +8,6 @@ namespace AsicServer.Core.Entities
         public User()
         {
             AttendeeGroups = new HashSet<AttendeeGroups>();
-            Records = new HashSet<Records>();
         }
 
         public long Id { get; set; }
@@ -17,10 +16,9 @@ namespace AsicServer.Core.Entities
         public string Fullname { get; set; }
         public string Email { get; set; }
         public string Image { get; set; }
-        public int? RoleId { get; set; }
+        public int RoleId { get; set; }
 
         public virtual Role Role { get; set; }
         public virtual ICollection<AttendeeGroups> AttendeeGroups { get; set; }
-        public virtual ICollection<Records> Records { get; set; }
     }
 }

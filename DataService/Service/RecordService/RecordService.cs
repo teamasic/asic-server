@@ -53,11 +53,12 @@ namespace DataService.Service.RecordService
                             SessionEndTime = data.Session.EndTime,
                             RoomName = data.Session.RoomName,
                             RtspString = data.Session.RtspString,
-                            GroupCode = data.Session.Group.Code,
-                            GroupName = data.Session.Group.Name,
-                            GroupCreateTime = data.Session.Group.DateTimeCreated,
-                            MaxSessionCount = data.Session.Group.MaxSessionCount,
-                            Present = data.Present
+                            GroupCode = data.Group.Code,
+                            GroupName = data.Group.Name,
+                            GroupCreateTime = data.Group.DateTimeCreated,
+                            MaxSessionCount = data.Group.MaxSessionCount,
+                            Present = data.Present,
+                            IsEnrollInClass = data.IsEnrollInClass
                         };
                     }).ToList();
                     await recordStagingRepository.AddRangeAsync(recordStagings);

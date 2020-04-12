@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE MergeRecordStagingInSyncData 
+﻿CREATE PROCEDURE [dbo].[MergeRecordStagingInSyncData] 
 	-- Add the parameters for the stored procedure here
 	@stagingid IntID readonly
 AS
@@ -14,7 +14,8 @@ BEGIN
 	DECLARE @RecordsInStaging TABLE(NewAttendeeId int, AttendeeCode varchar(50), 
 										NewSessionId int, SessionName nvarchar(50), 
 										SessionStartTime datetime, SessionEndTime datetime, 
-										Present bit)
+										Present bit, IsEnrollInClass bit, GroupId int)
+	DECLARE @AttendeeGroupsInStaging TABLE(AttendeeId int, AttendeeCode varchar(50), GroupCode varchar(50), GroupId int, IsActive bit)
 
 	--merge group
 	INSERT INTO @GroupsInStaging(GroupCode, GroupName, GroupCreateTime, MaxSessionCount) 
@@ -31,6 +32,27 @@ BEGIN
 			THEN INSERT (Code, [Name], DateTimeCreated, MaxSessionCount)
 					VALUES(t.GroupCode, t.GroupName, t.GroupCreateTime, t.MaxSessionCount);
 				
+	--merge AttendeeGroups (Enrollment)
+	INSERT INTO @AttendeeGroupsInStaging(AttendeeId, AttendeeCode, GroupCode, GroupId, IsActive) 
+	(
+		SELECT DISTINCT u.Id, AttendeeCode, rs.GroupCode, g.Id, rs.IsEnrollInClass
+		FROM [dbo].[RecordStaging] rs
+			INNER JOIN [User] u
+				ON rs.AttendeeCode = u.RollNumber
+			INNER JOIN [Groups] g
+				ON rs.GroupCode = g.Code
+		WHERE rs.Id in (SELECT * FROM @stagingid)
+	)
+	MERGE [AttendeeGroups] s
+		USING  @AttendeeGroupsInStaging t
+			ON (s.AttendeeId = t.AttendeeId and s.GroupId = t.GroupId)
+		WHEN MATCHED
+			THEN UPDATE SET 
+				s.IsActive = t.IsActive
+		WHEN NOT MATCHED BY TARGET
+			THEN INSERT (AttendeeId, GroupId, IsActive)
+					VALUES(t.AttendeeId, t.GroupId, t.IsActive);
+
 	--merge session
 	INSERT INTO @SessionsInStaging(SessionName, SessionStartTime, SessionEndTime, RoomName, RtspString, GroupId)
 	(
@@ -49,11 +71,12 @@ BEGIN
 					VALUES(t.SessionName, t.SessionStartTime, t.SessionEndTime, t.RoomName, t.RtspString, t.GroupId);
 	
 	--merge record
-	INSERT INTO @RecordsInStaging(NewAttendeeId, AttendeeCode, NewSessionId, SessionName, SessionStartTime, SessionEndTime, Present)
+	INSERT INTO @RecordsInStaging(NewAttendeeId, AttendeeCode, NewSessionId, SessionName, SessionStartTime, SessionEndTime, 
+									Present, IsEnrollInClass, GroupId)
 	(
 		SELECT a.Id as 'NewAttendeeId', rs.AttendeeCode,
 				s.Id as 'NewSessionId', s.[Name] as 'SessionName', rs.SessionStartTime, rs.SessionEndTime, 
-				rs.Present
+				rs.Present, rs.IsEnrollInClass, s.GroupId
 		FROM RecordStaging rs
 				INNER JOIN [User] a
 					ON rs.Attendeecode = a.RollNumber
@@ -69,8 +92,8 @@ BEGIN
 			THEN UPDATE SET 
 				s.Present = t.Present
 		WHEN NOT MATCHED BY TARGET
-			THEN INSERT (AttendeeId, AttendeeCode, SessionId, SessionName, StartTime, EndTime, Present)
+			THEN INSERT (AttendeeId, AttendeeCode, SessionId, SessionName, StartTime, EndTime, Present, GroupId)
 					VALUES(t.NewAttendeeId, t.AttendeeCode, 
 							t.NewSessionId, t.SessionName, t.SessionStartTime, t.SessionEndTime, 
-							t.Present);
+							t.Present, t.GroupId);
 END

@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[User] (
     [Id]         BIGINT         IDENTITY (1, 1) NOT NULL,
     [Username]   VARCHAR (255)  NOT NULL,
-    [RollNumber] VARCHAR (50)   NULL,
+    [RollNumber] VARCHAR (50)   NOT NULL,
     [Fullname]   NVARCHAR (255) NOT NULL,
     [Email]      VARCHAR (255)  NULL,
     [Image]      VARCHAR (MAX)  NULL,
@@ -11,6 +11,8 @@
     CONSTRAINT [IX_Account] UNIQUE NONCLUSTERED ([Username] ASC),
     CONSTRAINT [UK_RollNumber_Account] UNIQUE NONCLUSTERED ([RollNumber] ASC)
 );
+
+
 
 
 
