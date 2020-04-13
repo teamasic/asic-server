@@ -11,7 +11,7 @@ namespace AsicServer.Core.ViewModels
         public string Email { get; set; }
         [Name("fullname")]
         public string Fullname { get; set; }
-        [Name("rollNumber")]
+        [Name("code")]
         public string Code { get; set; }
         [Name("image")]
         public string Image { get; set; }
