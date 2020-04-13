@@ -10,7 +10,7 @@ namespace DataService.Repository
 {
     public interface IUserRepository : IBaseRepository<User>
     {
-        User GetUserByUsername(string username);
+        User GetUserByEmail(string username);
         bool AddRangeIfNotInDb(List<User> users);
         Task<User> AddIfNotInDb(User user);
         bool IsExisted(string username);
@@ -25,7 +25,7 @@ namespace DataService.Repository
 
         public async Task<User> AddIfNotInDb(User user)
         {
-            var userInDb = GetUserByUsername(user.Username);
+            var userInDb = GetUserByEmail(user.Email);
             if(userInDb == null)
             {
                 userInDb = user;
@@ -40,7 +40,7 @@ namespace DataService.Repository
             {
                 foreach (var user in users)
                 {
-                    var userInDb = GetUserByUsername(user.Username);
+                    var userInDb = GetUserByEmail(user.Email);
                     if(userInDb == null)
                     {
                         dbContext.Add(user);
@@ -59,23 +59,23 @@ namespace DataService.Repository
             return Get(u => u.Email == email).FirstOrDefault();
         }
 
-        public User GetByRollNumber(string rollNumber)
+        public User GetByAttendeeCode(string code)
         {
-            var user = Get(filter: acc => string.Equals(acc.RollNumber, rollNumber),
+            var user = Get(filter: acc => string.Equals(acc.Code, code),
                 orderBy: null).FirstOrDefault();
             return user;
         }
 
-        public User GetUserByUsername(string username)
+        public User GetUserByEmail(string email)
         {
-            var user = this.Get(filter: acc => string.Equals(acc.Username, username), 
+            var user = this.Get(filter: acc => string.Equals(acc.Email, email), 
                 orderBy: null, "Role").FirstOrDefault();
             return user;
         }
 
-        public bool IsExisted(string username)
+        public bool IsExisted(string email)
         {
-            var user = this.Get(acc => string.Equals(acc.Username, username)).FirstOrDefault();
+            var user = this.Get(acc => string.Equals(acc.Email, email)).FirstOrDefault();
             return user != null;
         }
     }

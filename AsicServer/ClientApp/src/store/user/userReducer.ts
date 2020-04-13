@@ -8,13 +8,9 @@ const unloadedState: UserState = {
     isLoading: false,
     successfullyLoaded: false,
     currentUser: {
-        id: 0,
-        username: "",
+        code: "",
         fullname: "",
-        phoneNumber: "",
         email: "",
-        address: "",
-        birthdate: "",
         image: ""
     },
     isLogin: false,
