@@ -27,8 +27,7 @@ namespace DataService.Service.UserService
     public interface IUserService : IBaseService<User>
     {
         Task<AccessTokenResponse> Authenticate(UserAuthentication user);
-        Task<AccessTokenResponse> Register(RegisteredUser user);
-        //Task<AccessTokenResponse> RegisterExternalUsingFirebaseAsync(FirebaseRegisterExternal external);
+        Task<AccessTokenResponse> AuthenticateAsAdmin(UserAuthentication user);
         List<CreateUsersResponse> CreateMultipleUsers(IFormFile csvFile, IFormFile zipFile);
         Task<bool> CreateSingleUser(IFormFile zipFile, CreateUser user);
         UserViewModel GetByEmail(string email);
@@ -56,93 +55,12 @@ namespace DataService.Service.UserService
             else if (!string.IsNullOrEmpty(userAuthen.Username)
                 && !string.IsNullOrEmpty(userAuthen.Password))
             {
-                return AuthenticateByUsernameAndPassword(userAuthen);
+                //return AuthenticateByUsernameAndPassword(userAuthen);
+                throw new NotImplementedException("Not support authentication with username and password");
             }
             throw new BaseException(ErrorMessage.CREDENTIALS_NOT_MATCH);
         }
 
-        public async Task<AccessTokenResponse> Register(RegisteredUser userRegister)
-        {
-            using (var trans = unitOfWork.CreateTransaction())
-            {
-                AccessTokenResponse token = null;
-                RegisteredUserValidation validation = new RegisteredUserValidation(this.repository);
-                validation.ValidateAndThrow(userRegister);
-
-                var user = userRegister.ToEntity<User>();
-
-                try
-                {
-                    byte[] hash, salt;
-                    PasswordManipulation.CreatePasswordHash(userRegister.Password, out hash, out salt);
-                    user.PasswordHash = hash;
-                    user.PasswordSalt = salt;
-
-                    var roles = userRegister.Role.Trim().Split(",");
-                    foreach (var role in roles)
-                    {
-                        user.UserRole.Add(new UserRole()
-                        {
-                            RoleId = (int)Enum.Parse(typeof(RolesEnum), role, true)
-                        });
-                    }
-
-                    await this.repository.AddAsync(user);
-                    token = CreateToken(user);
-                    trans.Commit();
-                }
-                catch (Exception ex)
-                {
-                    trans.Rollback();
-                    throw ex;
-                }
-                return token;
-            }
-        }
-
-        //public async Task<AccessTokenResponse> RegisterExternalUsingFirebaseAsync(FirebaseRegisterExternal external)
-        //{
-        //    using (var trans = unitOfWork.CreateTransaction())
-        //    {
-        //        AccessTokenResponse token = null;
-        //        try
-        //        {
-        //            FirebaseRegisterExternalValidation validation = new FirebaseRegisterExternalValidation();
-        //            validation.ValidateAndThrow(external);
-
-        //            FirebaseToken decodedToken = validation.ParsedToken;
-
-        //            var claims = decodedToken.Claims;
-        //            string email = claims["email"] + "";
-        //            string name = claims["name"] + "";
-        //            string avatar = claims["picture"] + "";
-
-        //            var user = repository.GetUserByUsername(email);
-        //            if (user == null)
-        //            {
-        //                user = new User()
-        //                {
-        //                    Email = email,
-        //                    Username = email,
-        //                    Fullname = name
-        //                };
-        //                user.UserRole.Add(new UserRole()
-        //                {
-        //                    RoleId = (int)RolesEnum.MEMBER
-        //                });
-        //                await this.repository.AddAsync(user);
-        //            }
-        //            token = CreateToken(user);
-        //            trans.Commit();
-        //        }
-        //        catch (Exception e)
-        //        {
-        //            trans.Rollback();
-        //            throw e;
-        //        }
-        //        return token;
-        //    }
-        //}
 
         private AccessTokenResponse CreateToken(User user)
         {
@@ -150,34 +68,10 @@ namespace DataService.Service.UserService
             {
                 User = user.ToViewModel<UserViewModel>(),
                 AccessToken = jwtTokenProvider.CreateAccesstoken(user),
-                Roles = user.UserRole.Select(ur => ur.RoleId.ToString()).ToArray()
+                Roles = new string[] { user.RoleId + "" }
             };
         }
 
-        private AccessTokenResponse AuthenticateByUsernameAndPassword(UserAuthentication userAuthen)
-        {
-            var user = repository.GetUserByUsername(userAuthen.Username);
-            AccessTokenResponse token = null;
-
-            UserAuthenticationValidation validation = new UserAuthenticationValidation();
-            var validationResult = validation.Validate(userAuthen);
-
-            if (!validationResult.IsValid || user == null)
-                throw new BaseException(ErrorMessage.CREDENTIALS_NOT_MATCH);
-
-            var result = PasswordManipulation.VerifyPasswordHash(userAuthen.Password,
-                                user.PasswordHash, user.PasswordSalt);
-            if (user != null && result)
-            {
-                token = CreateToken(user);
-            }
-            else
-            {
-                throw new BaseException(ErrorMessage.CREDENTIALS_NOT_MATCH);
-            }
-
-            return token;
-        }
 
         private async Task<AccessTokenResponse> AuthenticateByFirebaseAsync(FirebaseRegisterExternal external)
         {
@@ -211,12 +105,9 @@ namespace DataService.Service.UserService
                             Email = email,
                             Username = email,
                             Fullname = name,
-                            Image = avatar
-                        };
-                        user.UserRole.Add(new UserRole()
-                        {
+                            Image = avatar,
                             RoleId = (int)RolesEnum.ATTENDEE
-                        });
+                        };
                         await this.repository.AddAsync(user);
                     }
                     token = CreateToken(user);
@@ -249,10 +140,7 @@ namespace DataService.Service.UserService
                         RollNumber = user.RollNumber,
                         Image = user.Image
                     };
-                    newUser.UserRole.Add(new UserRole()
-                    {
-                        RoleId = (int)RolesEnum.ATTENDEE
-                    });
+                    newUser.RoleId = (int)RolesEnum.ATTENDEE;
                     newUsers.Add(newUser);
                 }
                 if (repository.AddRangeIfNotInDb(newUsers))
@@ -348,7 +236,7 @@ namespace DataService.Service.UserService
             var results = new List<CreateUsersResponse>();
             foreach (var user in usersInDB)
             {
-                if(users.ContainsKey(user.RollNumber))
+                if (users.ContainsKey(user.RollNumber))
                 {
                     var listImages = new List<ZipArchiveEntry>();
                     users.TryGetValue(user.RollNumber, out listImages);
@@ -383,10 +271,7 @@ namespace DataService.Service.UserService
                 RollNumber = user.RollNumber,
                 Image = user.Image
             };
-            newUser.UserRole.Add(new UserRole()
-            {
-                RoleId = (int)RolesEnum.ATTENDEE
-            });
+            newUser.RoleId = (int)RolesEnum.ATTENDEE;
             var userInDb = await repository.AddIfNotInDb(newUser);
             var dictionary = UnZip(zipFile.OpenReadStream(), userInDb);
             var listImages = new List<ZipArchiveEntry>();
@@ -397,11 +282,23 @@ namespace DataService.Service.UserService
         public UserViewModel GetByEmail(string email)
         {
             var user = repository.GetByEmail(email);
-            if(user != null)
+            if (user != null)
             {
                 return AutoMapper.Mapper.Map<UserViewModel>(user);
             }
             throw new BaseException(HttpStatusCode.NotFound, ErrorMessage.USER_EMAIL_NOT_FOUND, email);
+        }
+
+        public async Task<AccessTokenResponse> AuthenticateAsAdmin(UserAuthentication user)
+        {
+            var result = await Authenticate(user);
+            //check role
+            var adminRole = (int)RolesEnum.ADMIN;
+            if (!result.Roles.Contains(adminRole.ToString(), StringComparer.OrdinalIgnoreCase))
+            {
+                throw new BaseException(ErrorMessage.NOT_AUTHORIZED_USER);
+            }
+            return result;
         }
     }
 }

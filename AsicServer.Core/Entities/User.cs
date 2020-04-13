@@ -9,22 +9,18 @@ namespace AsicServer.Core.Entities
         {
             AttendeeGroups = new HashSet<AttendeeGroups>();
             Records = new HashSet<Records>();
-            UserRole = new HashSet<UserRole>();
         }
 
         public long Id { get; set; }
         public string Username { get; set; }
         public string RollNumber { get; set; }
-        public byte[] PasswordHash { get; set; }
-        public byte[] PasswordSalt { get; set; }
         public string Fullname { get; set; }
-        public string PhoneNumber { get; set; }
         public string Email { get; set; }
-        public string Address { get; set; }
-        public DateTime? Birthdate { get; set; }
         public string Image { get; set; }
+        public int? RoleId { get; set; }
+
+        public virtual Role Role { get; set; }
         public virtual ICollection<AttendeeGroups> AttendeeGroups { get; set; }
         public virtual ICollection<Records> Records { get; set; }
-        public virtual ICollection<UserRole> UserRole { get; set; }
     }
 }

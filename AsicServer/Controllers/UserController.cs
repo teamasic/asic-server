@@ -34,23 +34,15 @@ namespace AsicServer.Controllers
             });
         }
 
-        [HttpPost("register")]
-        public async Task<dynamic> Register(RegisteredUser user)
+        [HttpPost("login/admin")]
+        public async Task<dynamic> LoginAsAdmin(UserAuthentication user)
         {
             return await ExecuteInMonitoring(async () =>
             {
-                return await this.service.Register(user);
+                var result = await service.AuthenticateAsAdmin(user);
+                return result;
             });
         }
-
-        //[HttpPost("registerExternal")]
-        //public async Task<dynamic> RegisterWithFirebase(FirebaseRegisterExternal external)
-        //{
-        //    return await ExecuteInMonitoring(async () =>
-        //    {
-        //        return await service.RegisterExternalUsingFirebaseAsync(external);
-        //    });
-        //}
 
         [HttpPost("multiple")]
         public async Task<dynamic> CreateMultipleUsers(IFormFile zipFile, IFormFile users)

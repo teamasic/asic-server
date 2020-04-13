@@ -30,8 +30,8 @@ namespace AsicServer.Core.Utils
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Name ,user.Username),
                 };
-            var roles = user.UserRole.Select(ur => ur.RoleId.ToString()).ToArray();
-            foreach (var role in roles) claims.Add(new Claim(ClaimTypes.Role, role));
+            var role = user.Role.Name;
+            claims.Add(new Claim(ClaimTypes.Role, role));
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {

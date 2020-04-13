@@ -12,6 +12,8 @@ import UserLogin from '../models/UserLogin';
 import { UserState } from '../store/user/userState';
 import { RouteComponentProps } from 'react-router';
 import * as firebase from '../firebase';
+import Text from 'antd/lib/typography/Text';
+import { getErrors, error } from '../utils';
 
 const redirectLocation = '/dashboard';
 // At runtime, Redux will merge together...
@@ -21,11 +23,19 @@ type LoginProps =
   & FormComponentProps
   & RouteComponentProps<{}>; // ... plus incoming routing parameters
 
-class NormalLoginForm extends React.Component<LoginProps, UserState> {
+interface LoginComponentState {
+  errorMessage: string
+}
+
+class NormalLoginForm extends React.Component<LoginProps, LoginComponentState> {
+
+  state = {
+    errorMessage: ""
+  }
 
   constructor(props: LoginProps) {
     super(props);
-    console.log(props)
+
   }
 
   public componentDidMount() {
@@ -96,25 +106,25 @@ class NormalLoginForm extends React.Component<LoginProps, UserState> {
           )}
         </Form.Item>
         <Form.Item>
-          {getFieldDecorator('remember', {
-            valuePropName: 'checked',
-            initialValue: true,
-          })(<Checkbox>Remember me</Checkbox>)}
-          <a className="login-form-forgot" href="">
-            Forgot password
-      </a>
           <Button type="primary" htmlType="submit" className="login-form-button">
             Log in
-      </Button>
-          Or <a href="">register now!</a>
+          </Button>
         </Form.Item>
         <Form.Item>
           <Button type='primary' onClick={firebase.auth.doSignInWithGooogle}>Sign in with Google</Button>
+          {
+            this.props.errors.length === 0 ? "" :
+              this.renderErrors()
+          }
         </Form.Item>
       </Form>);
   }
 
-
+  private renderErrors() {
+    firebase.auth.doSignOut().then(() => {
+      error(getErrors(this.props.errors))
+    });
+  }
 }
 
 
