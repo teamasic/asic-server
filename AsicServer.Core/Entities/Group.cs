@@ -7,8 +7,8 @@ namespace AsicServer.Core.Entities
     {
         public Group()
         {
-            AttendeeGroups = new HashSet<AttendeeGroup>();
-            Sessions = new HashSet<Session>();
+            AttendeeGroup = new HashSet<AttendeeGroup>();
+            Session = new HashSet<Session>();
         }
 
         public string Code { get; set; }
@@ -17,7 +17,7 @@ namespace AsicServer.Core.Entities
         public int? TotalSession { get; set; }
         public bool Deleted { get; set; }
 
-        public virtual ICollection<AttendeeGroup> AttendeeGroups { get; set; }
-        public virtual ICollection<Session> Sessions { get; set; }
+        public virtual ICollection<AttendeeGroup> AttendeeGroup { get; set; }
+        public virtual ICollection<Session> Session { get; set; }
     }
 }

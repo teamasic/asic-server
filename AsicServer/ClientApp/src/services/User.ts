@@ -26,7 +26,7 @@ export const createSingleUser = async (zipFile: File, user: CreateUser): Promise
     const response = await axios.post(apify("single"), formData, {
         params: {
             Email: user.email,
-            RollNumber: user.rollNumber,
+            RollNumber: user.code,
             Fullname: user.fullname,
             Image: user.image
         }

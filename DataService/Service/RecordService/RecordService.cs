@@ -48,7 +48,7 @@ namespace DataService.Service.RecordService
                             GroupCode = data.Group.Code,
                             GroupName = data.Group.Name,
                             GroupCreateTime = data.Group.DateTimeCreated,
-                            MaxSessionCount = data.Group.MaxSessionCount,
+                            MaxSessionCount = data.Group.TotalSession,
                             Present = data.Present,
                             IsEnrollInClass = data.IsEnrollInClass
                         };

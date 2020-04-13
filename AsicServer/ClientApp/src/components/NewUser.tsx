@@ -159,10 +159,10 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
     }
 
     private checkValidCSVFileFormat = (users: []) => {
-        let temp: { email: string, rollNumber: string, fullname: string, image: string }[] = users;
+        let temp: { email: string, code: string, fullname: string, image: string }[] = users;
         if (temp.length > 0) {
             if (!isNullOrUndefined(temp[0].email)
-                && !isNullOrUndefined(temp[0].rollNumber)
+                && !isNullOrUndefined(temp[0].code)
                 && !isNullOrUndefined(temp[0].fullname)
                 && !isNullOrUndefined(temp[0].image)) {
                 return true;
@@ -231,7 +231,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                 this.setState({creatingSingleUser: true});
                 var user = {
                     email: values.email,
-                    rollNumber: values.rollNumber,
+                    code: values.code,
                     fullname: values.fullname,
                     image: values.image
                 };
@@ -360,9 +360,9 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                 }
             },
             {
-                title: 'Roll number',
-                key: 'rollNumber',
-                dataIndex: 'rollNumber',
+                title: 'Code',
+                key: 'code',
+                dataIndex: 'code',
                 width: '20%'
             },
             {
@@ -478,11 +478,11 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                             <Input type="email" onBlur={this.onEmailBlur} />
                                         )}
                                     </Form.Item>
-                                    <Form.Item label="Roll number" required>
-                                        {getFieldDecorator('rollNumber', {
+                                    <Form.Item label="Code" required>
+                                        {getFieldDecorator('code', {
                                             rules: [
-                                                { required: true, message: 'Please input roll number' },
-                                                { min: 3, max: 10, message: 'Roll number requires 3-10 characters' }
+                                                { required: true, message: 'Please input code' },
+                                                { min: 3, max: 10, message: 'Code requires 3-10 characters' }
                                             ],
                                         })(
                                             <Input type="text" disabled={this.state.user != null} />
