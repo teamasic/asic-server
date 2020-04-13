@@ -7,13 +7,13 @@ namespace AsicServer.Core.Entities
     {
         public Room()
         {
-            Sessions = new HashSet<Session>();
+            Session = new HashSet<Session>();
         }
 
         public int Id { get; set; }
         public string Name { get; set; }
         public string CameraConnectionString { get; set; }
 
-        public virtual ICollection<Session> Sessions { get; set; }
+        public virtual ICollection<Session> Session { get; set; }
     }
 }

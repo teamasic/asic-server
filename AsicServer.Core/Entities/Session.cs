@@ -7,7 +7,7 @@ namespace AsicServer.Core.Entities
     {
         public Session()
         {
-            Records = new HashSet<Record>();
+            Record = new HashSet<Record>();
         }
 
         public int Id { get; set; }
@@ -18,8 +18,8 @@ namespace AsicServer.Core.Entities
         public string GroupCode { get; set; }
         public int RoomId { get; set; }
 
-        public virtual Group Group { get; set; }
+        public virtual Group GroupCodeNavigation { get; set; }
         public virtual Room Room { get; set; }
-        public virtual ICollection<Record> Records { get; set; }
+        public virtual ICollection<Record> Record { get; set; }
     }
 }

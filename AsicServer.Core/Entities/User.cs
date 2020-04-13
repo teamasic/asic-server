@@ -4,10 +4,10 @@ using System.Collections.Generic;
 namespace AsicServer.Core.Entities
 {
     public partial class User
-    {
+    {   
         public User()
         {
-            AttendeeGroups = new HashSet<AttendeeGroup>();
+            AttendeeGroup = new HashSet<AttendeeGroup>();
         }
 
         public string Code { get; set; }
@@ -17,6 +17,6 @@ namespace AsicServer.Core.Entities
         public int RoleId { get; set; }
 
         public virtual Role Role { get; set; }
-        public virtual ICollection<AttendeeGroup> AttendeeGroups { get; set; }
+        public virtual ICollection<AttendeeGroup> AttendeeGroup { get; set; }
     }
 }

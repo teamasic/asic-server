@@ -15,15 +15,15 @@ namespace AsicServer.Core.Entities
         {
         }
 
-        public virtual DbSet<AttendeeGroup> AttendeeGroups { get; set; }
-        public virtual DbSet<ChangeRequest> ChangeRequests { get; set; }
-        public virtual DbSet<Group> Groups { get; set; }
-        public virtual DbSet<Record> Records { get; set; }
-        public virtual DbSet<Role> Role { get; set; }
-        public virtual DbSet<Room> Rooms { get; set; }
-        public virtual DbSet<Session> Sessions { get; set; }
-        public virtual DbSet<User> User { get; set; }
+        public virtual DbSet<AttendeeGroup> AttendeeGroup { get; set; }
+        public virtual DbSet<ChangeRequest> ChangeRequest { get; set; }
+        public virtual DbSet<Group> Group { get; set; }
+        public virtual DbSet<Record> Record { get; set; }
         public virtual DbSet<RecordStaging> RecordStaging { get; set; }
+        public virtual DbSet<Role> Role { get; set; }
+        public virtual DbSet<Room> Room { get; set; }
+        public virtual DbSet<Session> Session { get; set; }
+        public virtual DbSet<User> User { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -49,14 +49,14 @@ namespace AsicServer.Core.Entities
 
                 entity.Property(e => e.IsActive).HasDefaultValueSql("((1))");
 
-                entity.HasOne(d => d.Attendee)
-                    .WithMany(p => p.AttendeeGroups)
+                entity.HasOne(d => d.AttendeeCodeNavigation)
+                    .WithMany(p => p.AttendeeGroup)
                     .HasForeignKey(d => d.AttendeeCode)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_AttendeeGroups_User");
 
-                entity.HasOne(d => d.Group)
-                    .WithMany(p => p.AttendeeGroups)
+                entity.HasOne(d => d.GroupCodeNavigation)
+                    .WithMany(p => p.AttendeeGroup)
                     .HasForeignKey(d => d.GroupCode)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_AttendeeGroups_Groups");
@@ -109,13 +109,13 @@ namespace AsicServer.Core.Entities
                     .HasDefaultValueSql("(getdate())");
 
                 entity.HasOne(d => d.AttendeeGroup)
-                    .WithMany(p => p.Records)
+                    .WithMany(p => p.Record)
                     .HasForeignKey(d => d.AttendeeGroupId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Records_AttendeeGroups");
 
                 entity.HasOne(d => d.Session)
-                    .WithMany(p => p.Records)
+                    .WithMany(p => p.Record)
                     .HasForeignKey(d => d.SessionId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Records_0_0");
@@ -187,13 +187,13 @@ namespace AsicServer.Core.Entities
                     .HasMaxLength(50)
                     .IsUnicode(false);
 
-                entity.HasOne(d => d.Group)
-                    .WithMany(p => p.Sessions)
+                entity.HasOne(d => d.GroupCodeNavigation)
+                    .WithMany(p => p.Session)
                     .HasForeignKey(d => d.GroupCode)
                     .HasConstraintName("FK_Sessions_Groups");
 
                 entity.HasOne(d => d.Room)
-                    .WithMany(p => p.Sessions)
+                    .WithMany(p => p.Session)
                     .HasForeignKey(d => d.RoomId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Sessions_Rooms");
@@ -223,11 +223,15 @@ namespace AsicServer.Core.Entities
                 entity.Property(e => e.Image).IsUnicode(false);
 
                 entity.HasOne(d => d.Role)
-                    .WithMany(p => p.Users)
+                    .WithMany(p => p.User)
                     .HasForeignKey(d => d.RoleId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_User_Role");
             });
+
+            OnModelCreatingPartial(modelBuilder);
         }
+
+        partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
     }
 }
