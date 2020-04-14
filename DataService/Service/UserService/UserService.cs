@@ -27,6 +27,7 @@ namespace DataService.Service.UserService
         List<CreateUsersResponse> CreateMultipleUsers(IFormFile csvFile, IFormFile zipFile);
         Task<bool> CreateSingleUser(IFormFile zipFile, CreateUser user);
         UserViewModel GetByEmail(string email);
+        List<UserViewModel> GetByCodes(string codes);
     }
 
     public class UserService : BaseService<User>, IUserService
@@ -295,6 +296,21 @@ namespace DataService.Service.UserService
                 throw new BaseException(ErrorMessage.NOT_AUTHORIZED_USER);
             }
             return result;
+        }
+
+        public List<UserViewModel> GetByCodes(string codes)
+        {
+            var listCodes = codes.Split(',').ToList();
+            var viewModels = new List<UserViewModel>();
+            if(listCodes.Count > 0)
+            {
+                var users = repository.GetByCodes(listCodes);
+                foreach (var user in users)
+                {
+                    viewModels.Add(AutoMapper.Mapper.Map<UserViewModel>(user));
+                }
+            }
+            return viewModels;
         }
     }
 }

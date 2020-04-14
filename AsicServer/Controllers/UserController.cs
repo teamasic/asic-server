@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using AsicServer.Core.ViewModels;
 using AsicServer.Infrastructure;
 using DataService.Service.UserService;
@@ -64,6 +65,15 @@ namespace AsicServer.Controllers
             return ExecuteInMonitoring(() =>
             {
                 return service.GetByEmail(email);
+            });
+        }
+
+        [HttpGet("image")]
+        public BaseResponse<List<UserViewModel>> GetByCodes([FromQuery] string codes)
+        {
+            return ExecuteInMonitoring(() =>
+            {
+                return service.GetByCodes(codes);
             });
         }
 
