@@ -38,19 +38,17 @@ namespace DataService.Service.RecordService
                     {
                         return new RecordStaging()
                         {
-                            AttendeeCode = data.Attendee.Code,
-                            AttendeeName = data.Attendee.Name,
+                            AttendeeCode = data.AttendeeGroup.AttendeeCode,
                             SessionName = data.Session.Name,
                             SessionStartTime = data.Session.StartTime,
                             SessionEndTime = data.Session.EndTime,
-                            RoomName = data.Session.RoomName,
-                            RtspString = data.Session.RtspString,
-                            GroupCode = data.Group.Code,
-                            GroupName = data.Group.Name,
-                            GroupCreateTime = data.Group.DateTimeCreated,
-                            MaxSessionCount = data.Group.TotalSession,
+                            RoomId = data.Session.RoomId,
+                            GroupCode = data.AttendeeGroup.GroupCode,
+                            GroupName = data.AttendeeGroup.Group.Name,
+                            GroupCreateTime = data.AttendeeGroup.Group.DateTimeCreated,
+                            TotalSession = data.AttendeeGroup.Group.TotalSession.Value,
                             Present = data.Present,
-                            IsEnrollInClass = data.IsEnrollInClass
+                            IsEnrollInClass = data.AttendeeGroup.IsActive,
                         };
                     }).ToList();
                     await recordStagingRepository.AddRangeAsync(recordStagings);

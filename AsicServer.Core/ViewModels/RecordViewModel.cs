@@ -19,14 +19,14 @@ namespace AsicServer.Core.ViewModels
     {
         public int Id { get; set; }
         [Required]
-        public AttendeeViewModel Attendee { get; set; }
-        [Required]
         public SessionInSyncData Session { get; set; }
         [Required]
-        public GroupInSyncData Group { get; set; }
+        public AttendeeGroupViewModel AttendeeGroup { get; set; }
         [Required]
         public bool Present { get; set; }
-        public bool IsEnrollInClass { get; set; } = true;
+        public DateTime? UpdateTime { get; set; }
+
+
     }
 
     public class RecordStagingViewModel

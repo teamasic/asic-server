@@ -8,92 +8,83 @@ BEGIN
 	SET NOCOUNT ON;
 
     -- Insert statements for procedure here
-	DECLARE @GroupsInStaging TABLE(GroupCode varchar(50), GroupName nvarchar(255), GroupCreateTime datetime, MaxSessionCount int)
+	DECLARE @GroupsInStaging TABLE(GroupCode varchar(50), GroupName nvarchar(255), GroupCreateTime datetime, TotalSession int)
 	DECLARE @SessionsInStaging TABLE(SessionName nvarchar(50), SessionStartTime datetime, SessionEndTime datetime,
-									RoomName varchar(50), RtspString varchar(255), GroupId int)
-	DECLARE @RecordsInStaging TABLE(NewAttendeeId int, AttendeeCode varchar(50), 
+									RoomId int, GroupCode varchar(50), [Status] varchar(50))
+	DECLARE @RecordsInStaging TABLE(AttendeeCode varchar(50), AttendeeGroupId int,
 										NewSessionId int, SessionName nvarchar(50), 
 										SessionStartTime datetime, SessionEndTime datetime, 
-										Present bit, IsEnrollInClass bit, GroupId int)
-	DECLARE @AttendeeGroupsInStaging TABLE(AttendeeId int, AttendeeCode varchar(50), GroupCode varchar(50), GroupId int, IsActive bit)
+										Present bit)
+	DECLARE @AttendeeGroupsInStaging TABLE(AttendeeCode varchar(50), GroupCode varchar(50), IsEnrollInClass bit)
 
 	--merge group
-	INSERT INTO @GroupsInStaging(GroupCode, GroupName, GroupCreateTime, MaxSessionCount) 
+	INSERT INTO @GroupsInStaging(GroupCode, GroupName, GroupCreateTime, TotalSession) 
 	(
-		SELECT DISTINCT GroupCode, GroupName, GroupCreateTime, MaxSessionCount
+		SELECT DISTINCT GroupCode, GroupName, GroupCreateTime, TotalSession
 		FROM [dbo].[RecordStaging]
 		WHERE Id in (SELECT * FROM @stagingid)
 	)
 
-	MERGE [Groups] s
+	MERGE [Group] s
 		USING  @GroupsInStaging t
 			ON (s.Code = t.GroupCode)
 		WHEN NOT MATCHED BY TARGET
-			THEN INSERT (Code, [Name], DateTimeCreated, MaxSessionCount)
-					VALUES(t.GroupCode, t.GroupName, t.GroupCreateTime, t.MaxSessionCount);
+			THEN INSERT (Code, [Name], DateTimeCreated, TotalSession, Deleted)
+					VALUES(t.GroupCode, t.GroupName, t.GroupCreateTime, t.TotalSession, 0);
 				
 	--merge AttendeeGroups (Enrollment)
-	INSERT INTO @AttendeeGroupsInStaging(AttendeeId, AttendeeCode, GroupCode, GroupId, IsActive) 
+	INSERT INTO @AttendeeGroupsInStaging(AttendeeCode, GroupCode, IsEnrollInClass) 
 	(
-		SELECT DISTINCT u.Id, AttendeeCode, rs.GroupCode, g.Id, rs.IsEnrollInClass
+		SELECT DISTINCT rs.AttendeeCode, rs.GroupCode, rs.IsEnrollInClass
 		FROM [dbo].[RecordStaging] rs
-			INNER JOIN [User] u
-				ON rs.AttendeeCode = u.RollNumber
-			INNER JOIN [Groups] g
-				ON rs.GroupCode = g.Code
 		WHERE rs.Id in (SELECT * FROM @stagingid)
 	)
-	MERGE [AttendeeGroups] s
+	MERGE [AttendeeGroup] s
 		USING  @AttendeeGroupsInStaging t
-			ON (s.AttendeeId = t.AttendeeId and s.GroupId = t.GroupId)
+			ON (s.AttendeeCode = t.AttendeeCode and s.GroupCode = t.GroupCode)
 		WHEN MATCHED
 			THEN UPDATE SET 
-				s.IsActive = t.IsActive
+				s.IsActive = t.IsEnrollInClass
 		WHEN NOT MATCHED BY TARGET
-			THEN INSERT (AttendeeId, GroupId, IsActive)
-					VALUES(t.AttendeeId, t.GroupId, t.IsActive);
+			THEN INSERT (AttendeeCode, GroupCode, IsActive)
+					VALUES(t.AttendeeCode, t.GroupCode, t.IsEnrollInClass);
 
 	--merge session
-	INSERT INTO @SessionsInStaging(SessionName, SessionStartTime, SessionEndTime, RoomName, RtspString, GroupId)
+	INSERT INTO @SessionsInStaging(SessionName, SessionStartTime, SessionEndTime, RoomId, GroupCode, [Status])
 	(
-		SELECT DISTINCT SessionName, SessionStartTime, SessionEndTime, RoomName, RtspString, g.Id as 'GroupId'
+		SELECT DISTINCT rs.SessionName, rs.SessionStartTime, rs.SessionEndTime, rs.RoomId, rs.GroupCode, 'FINISHED'
 		FROM [dbo].[RecordStaging] rs 
-				INNER JOIN [Groups] g
-					ON rs.GroupCode = g.Code
 		WHERE rs.Id in (SELECT * FROM @stagingid)
 	)
-	MERGE [Sessions] s
+	MERGE [Session] s
 		USING  @SessionsInStaging t
-			ON (s.[Name] = t.SessionName and s.StartTime = t.SessionStartTime 
-										 and s.EndTime = t.SessionEndTime)
+			ON (s.GroupCode = t.GroupCode and s.StartTime = t.SessionStartTime)
 		WHEN NOT MATCHED BY TARGET
-			THEN INSERT ([Name], StartTime, EndTime, RoomName, RtspString, GroupId)
-					VALUES(t.SessionName, t.SessionStartTime, t.SessionEndTime, t.RoomName, t.RtspString, t.GroupId);
+			THEN INSERT ([Name], StartTime, EndTime, RoomId, GroupCode, [Status])
+					VALUES(t.SessionName, t.SessionStartTime, t.SessionEndTime, t.RoomId, t.GroupCode, t.[Status]);
 	
 	--merge record
-	INSERT INTO @RecordsInStaging(NewAttendeeId, AttendeeCode, NewSessionId, SessionName, SessionStartTime, SessionEndTime, 
-									Present, IsEnrollInClass, GroupId)
+	INSERT INTO @RecordsInStaging(AttendeeCode, SessionName, SessionStartTime, SessionEndTime, 
+									Present, NewSessionId, AttendeeGroupId)
 	(
-		SELECT a.Id as 'NewAttendeeId', rs.AttendeeCode,
-				s.Id as 'NewSessionId', s.[Name] as 'SessionName', rs.SessionStartTime, rs.SessionEndTime, 
-				rs.Present, rs.IsEnrollInClass, s.GroupId
+		SELECT rs.AttendeeCode, rs.SessionName, rs.SessionStartTime, rs.SessionEndTime,
+				rs.Present, s.Id as 'NewSessionId', ag.Id as 'AttendeeGroupId'
 		FROM RecordStaging rs
-				INNER JOIN [User] a
-					ON rs.Attendeecode = a.RollNumber
-				INNER JOIN [Sessions] s
-					ON (s.[Name] = rs.SessionName and rs.SessionStartTime = s.StartTime 
-												 and rs.SessionEndTime = s.EndTime)
+				INNER JOIN [AttendeeGroup] ag
+					ON (rs.Attendeecode = ag.AttendeeCode and rs.GroupCode = ag.GroupCode)
+				INNER JOIN [Session] s
+					ON (s.GroupCode = rs.GroupCode and rs.SessionStartTime = s.StartTime)
 		WHERE rs.Id in (SELECT * FROM @stagingid)
 	)
-	MERGE [Records] s
+	MERGE [Record] s
 		USING  @RecordsInStaging t
-			ON (s.AttendeeId = t.NewAttendeeId and s.SessionId = t.NewSessionId)
+			ON (s.AttendeeGroupId = t.AttendeeGroupId and s.SessionId = t.NewSessionId)
 		WHEN MATCHED
 			THEN UPDATE SET 
 				s.Present = t.Present
 		WHEN NOT MATCHED BY TARGET
-			THEN INSERT (AttendeeId, AttendeeCode, SessionId, SessionName, StartTime, EndTime, Present, GroupId)
-					VALUES(t.NewAttendeeId, t.AttendeeCode, 
+			THEN INSERT (AttendeeCode, SessionId, SessionName, StartTime, EndTime, Present, AttendeeGroupId)
+					VALUES(t.AttendeeCode, 
 							t.NewSessionId, t.SessionName, t.SessionStartTime, t.SessionEndTime, 
-							t.Present, t.GroupId);
+							t.Present, t.AttendeeGroupId);
 END
