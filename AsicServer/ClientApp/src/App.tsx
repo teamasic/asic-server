@@ -13,6 +13,7 @@ import User from './models/User';
 import { userActionCreators } from './store/user/userActionCreators';
 import { bindActionCreators } from 'redux';
 import { ApplicationState } from './store';
+import TrainModel from './components/TrainModel';
 
 type AppProps=
     UserState &
@@ -34,6 +35,7 @@ class AppComponent extends React.Component<AppProps> {
                 <Layout>
                     <Redirect exact to={routes.DASHBOARD} />
                     <Route exact path={routes.DASHBOARD} component={Dashboard} />
+                    <Route exact path={routes.TRAIN_MODEL} component={TrainModel} />
                 </Layout>
             );
         } else {
