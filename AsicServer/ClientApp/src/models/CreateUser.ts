@@ -1,6 +1,6 @@
 export default interface CreateUser {
     email: string;
     fullname: string,
-    rollNumber: string,
+    code: string,
     image: string
 }

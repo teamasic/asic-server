@@ -15,15 +15,15 @@ namespace AsicServer.Core.Entities
         {
         }
 
-        public virtual DbSet<AttendeeGroups> AttendeeGroups { get; set; }
-        public virtual DbSet<ChangeRequests> ChangeRequests { get; set; }
-        public virtual DbSet<Groups> Groups { get; set; }
-        public virtual DbSet<Records> Records { get; set; }
-        public virtual DbSet<Role> Role { get; set; }
-        public virtual DbSet<Rooms> Rooms { get; set; }
-        public virtual DbSet<Sessions> Sessions { get; set; }
-        public virtual DbSet<User> User { get; set; }
+        public virtual DbSet<AttendeeGroup> AttendeeGroup { get; set; }
+        public virtual DbSet<ChangeRequest> ChangeRequest { get; set; }
+        public virtual DbSet<Group> Group { get; set; }
+        public virtual DbSet<Record> Record { get; set; }
         public virtual DbSet<RecordStaging> RecordStaging { get; set; }
+        public virtual DbSet<Role> Role { get; set; }
+        public virtual DbSet<Room> Room { get; set; }
+        public virtual DbSet<Session> Session { get; set; }
+        public virtual DbSet<User> User { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -31,46 +31,94 @@ namespace AsicServer.Core.Entities
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<AttendeeGroups>(entity =>
+            modelBuilder.Entity<AttendeeGroup>(entity =>
             {
-                entity.HasKey(e => new { e.AttendeeId, e.GroupId })
-                    .HasName("sqlite_autoindex_AttendeeGroups_1");
+                entity.HasIndex(e => new { e.AttendeeCode, e.GroupCode })
+                    .HasName("UK_AttendeeGroups")
+                    .IsUnique();
+
+                entity.Property(e => e.AttendeeCode)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.GroupCode)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.IsActive).HasDefaultValueSql("((1))");
 
                 entity.HasOne(d => d.Attendee)
-                    .WithMany(p => p.AttendeeGroups)
-                    .HasForeignKey(d => d.AttendeeId)
+                    .WithMany(p => p.AttendeeGroup)
+                    .HasForeignKey(d => d.AttendeeCode)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_AttendeeGroups_User");
 
                 entity.HasOne(d => d.Group)
-                    .WithMany(p => p.AttendeeGroups)
-                    .HasForeignKey(d => d.GroupId)
-                    .HasConstraintName("FK_AttendeeGroups_0_0");
+                    .WithMany(p => p.AttendeeGroup)
+                    .HasForeignKey(d => d.GroupCode)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AttendeeGroups_Groups");
             });
 
-            modelBuilder.Entity<ChangeRequests>(entity =>
+            modelBuilder.Entity<ChangeRequest>(entity =>
             {
+                entity.HasIndex(e => e.RecordId)
+                    .HasName("UK_ChangeRequests_RecordId")
+                    .IsUnique();
+
                 entity.Property(e => e.Comment).HasMaxLength(255);
 
                 entity.HasOne(d => d.Record)
-                    .WithMany(p => p.ChangeRequests)
-                    .HasForeignKey(d => d.RecordId)
-                    .HasConstraintName("FK_ChangeRequests_0_0");
+                    .WithOne(p => p.ChangeRequest)
+                    .HasForeignKey<ChangeRequest>(d => d.RecordId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_ChangeRequests_Records");
             });
 
-            modelBuilder.Entity<Groups>(entity =>
+            modelBuilder.Entity<Group>(entity =>
             {
-                entity.HasIndex(e => e.Code)
-                    .HasName("UK_Groups_Code")
-                    .IsUnique();
+                entity.HasKey(e => e.Code)
+                    .HasName("PK_Groups");
 
                 entity.Property(e => e.Code)
                     .HasMaxLength(50)
                     .IsUnicode(false);
 
-                entity.Property(e => e.DateTimeCreated).HasColumnType("datetime");
+                entity.Property(e => e.DateTimeCreated)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
 
-                entity.Property(e => e.Name).HasMaxLength(255);
+                entity.Property(e => e.Name).HasMaxLength(100);
+            });
+
+            modelBuilder.Entity<Record>(entity =>
+            {
+                entity.Property(e => e.AttendeeCode)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.EndTime).HasColumnType("datetime");
+
+                entity.Property(e => e.SessionName).HasMaxLength(50);
+
+                entity.Property(e => e.StartTime)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.HasOne(d => d.AttendeeGroup)
+                    .WithMany(p => p.Record)
+                    .HasForeignKey(d => d.AttendeeGroupId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Records_AttendeeGroups");
+
+                entity.HasOne(d => d.Session)
+                    .WithMany(p => p.Record)
+                    .HasForeignKey(d => d.SessionId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Records_0_0");
             });
 
             modelBuilder.Entity<RecordStaging>(entity =>
@@ -79,21 +127,13 @@ namespace AsicServer.Core.Entities
                     .HasMaxLength(50)
                     .IsUnicode(false);
 
-                entity.Property(e => e.AttendeeName).HasMaxLength(255);
-
                 entity.Property(e => e.GroupCode).HasMaxLength(50);
 
                 entity.Property(e => e.GroupCreateTime).HasColumnType("datetime");
 
                 entity.Property(e => e.GroupName).HasMaxLength(255);
 
-                entity.Property(e => e.RoomName)
-                    .HasMaxLength(50)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.RtspString)
-                    .HasMaxLength(255)
-                    .IsUnicode(false);
+                entity.Property(e => e.RoomId).HasColumnType("int");
 
                 entity.Property(e => e.SessionEndTime).HasColumnType("datetime");
 
@@ -102,111 +142,88 @@ namespace AsicServer.Core.Entities
                 entity.Property(e => e.SessionStartTime).HasColumnType("datetime");
             });
 
-            modelBuilder.Entity<Records>(entity =>
-            {
-                entity.Property(e => e.AttendeeCode)
-                    .HasMaxLength(50)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.EndTime).HasColumnType("datetime");
-
-                entity.Property(e => e.SessionName).HasMaxLength(50);
-
-                entity.Property(e => e.StartTime).HasColumnType("datetime");
-
-                entity.HasOne(d => d.Attendee)
-                    .WithMany(p => p.Records)
-                    .HasForeignKey(d => d.AttendeeId)
-                    .HasConstraintName("FK_Records_User");
-
-                entity.HasOne(d => d.Session)
-                    .WithMany(p => p.Records)
-                    .HasForeignKey(d => d.SessionId)
-                    .HasConstraintName("FK_Records_0_0");
-            });
-
             modelBuilder.Entity<Role>(entity =>
             {
                 entity.Property(e => e.Name)
                     .HasColumnName("name")
-                    .HasMaxLength(100)
+                    .HasMaxLength(50)
                     .IsUnicode(false);
-
-                entity.HasMany(d => d.User)
-                .WithOne(d => d.Role);
-
             });
 
-            modelBuilder.Entity<Rooms>(entity =>
+            modelBuilder.Entity<Room>(entity =>
             {
+                entity.Property(e => e.CameraConnectionString)
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(50)
                     .IsUnicode(false);
-
-                entity.Property(e => e.RtspString)
-                    .IsRequired()
-                    .HasMaxLength(255)
-                    .IsUnicode(false);
             });
 
-            modelBuilder.Entity<Sessions>(entity =>
+            modelBuilder.Entity<Session>(entity =>
             {
                 entity.Property(e => e.EndTime).HasColumnType("datetime");
 
-                entity.Property(e => e.Name).HasMaxLength(50);
-
-                entity.Property(e => e.RoomName)
-                    .IsRequired()
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.RtspString)
-                    .IsRequired()
-                    .HasMaxLength(255)
+                entity.Property(e => e.GroupCode)
+                    .HasMaxLength(50)
                     .IsUnicode(false);
+
+                entity.Property(e => e.Name).HasMaxLength(50);
 
                 entity.Property(e => e.StartTime).HasColumnType("datetime");
 
-                entity.HasOne(d => d.Group)
-                    .WithMany(p => p.Sessions)
-                    .HasForeignKey(d => d.GroupId)
-                    .HasConstraintName("FK_Sessions_0_0");
+                entity.Property(e => e.Status)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.HasOne(d => d.GroupCodeNavigation)
+                    .WithMany(p => p.Session)
+                    .HasForeignKey(d => d.GroupCode)
+                    .HasConstraintName("FK_Sessions_Groups");
+
+                entity.HasOne(d => d.Room)
+                    .WithMany(p => p.Session)
+                    .HasForeignKey(d => d.RoomId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Sessions_Rooms");
             });
 
             modelBuilder.Entity<User>(entity =>
             {
-                entity.HasIndex(e => e.RollNumber)
-                    .HasName("UK_RollNumber_Account")
+                entity.HasKey(e => e.Code);
+
+                entity.HasIndex(e => e.Email)
+                    .HasName("UK_User_Email")
                     .IsUnique();
 
-                entity.HasIndex(e => e.Username)
-                    .HasName("IX_Account")
-                    .IsUnique();
-
-                entity.Property(e => e.Email)
-                    .HasMaxLength(255)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Fullname)
-                    .IsRequired()
-                    .HasMaxLength(255);
-
-                entity.Property(e => e.Image).IsUnicode(false);
-
-                entity.Property(e => e.RollNumber)
+                entity.Property(e => e.Code)
                     .HasMaxLength(50)
                     .IsUnicode(false);
 
-                entity.Property(e => e.Username)
+                entity.Property(e => e.Email)
                     .IsRequired()
-                    .HasMaxLength(255)
+                    .HasMaxLength(50)
                     .IsUnicode(false);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.Image).IsUnicode(false);
 
                 entity.HasOne(d => d.Role)
                     .WithMany(p => p.User)
                     .HasForeignKey(d => d.RoleId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_User_Role");
             });
+
+            OnModelCreatingPartial(modelBuilder);
         }
+
+        partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
     }
 }

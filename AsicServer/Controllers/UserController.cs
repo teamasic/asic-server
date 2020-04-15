@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using AsicServer.Core.Models;
+﻿using System.Threading.Tasks;
 using AsicServer.Core.ViewModels;
 using AsicServer.Infrastructure;
-using DataService.Service;
 using DataService.Service.UserService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -45,23 +39,23 @@ namespace AsicServer.Controllers
         }
 
         [HttpPost("multiple")]
-        public async Task<dynamic> CreateMultipleUsers(IFormFile zipFile, IFormFile users)
+        public dynamic CreateMultipleUsers(IFormFile zipFile, IFormFile users)
         {
-            return await ExecuteInMonitoring(async () =>
+            return ExecuteInMonitoring(() =>
             {
-                var userWithoutImages = service.CreateMultipleUsers(users, zipFile);
-                return userWithoutImages;
+              var userWithoutImages = service.CreateMultipleUsers(users, zipFile);
+              return userWithoutImages;
             });
         }
 
         [HttpPost("single")]
-        public async Task<dynamic> CreateSingleUsers(IFormFile zipFile, [FromQuery] CreateUser user)
+        public dynamic CreateSingleUsers(IFormFile zipFile, [FromQuery] CreateUser user)
         {
-            return await ExecuteInMonitoring(async () =>
-            {
-                var result = service.CreateSingleUser(zipFile, user).Result;
-                return result;
-            });
+            return ExecuteInMonitoring(() =>
+           {
+               var result = service.CreateSingleUser(zipFile, user).Result;
+               return result;
+           });
         }
 
         [HttpGet]

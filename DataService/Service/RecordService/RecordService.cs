@@ -1,30 +1,22 @@
-﻿using AsicServer.Core.Constant;
-using AsicServer.Core.Entities;
-using AsicServer.Core.Models;
-using AsicServer.Core.Utils;
+﻿using AsicServer.Core.Entities;
 using AsicServer.Core.ViewModels;
+using AsicServer.Core.Utils;
 using AsicServer.Infrastructure;
 using DataService.Repository;
 using DataService.UoW;
-using DataService.Validation;
-using FirebaseAdmin.Auth;
-using FluentValidation;
-using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DataService.Service.RecordService
 {
-    public interface IRecordService : IBaseService<Records>
+    public interface IRecordService : IBaseService<Record>
     {
         Task ProcessSyncRequestAsync(List<RecordInSyncData> attendanceData);
     }
 
-    public class RecordService : BaseService<Records>, IRecordService
+    public class RecordService : BaseService<Record>, IRecordService
     {
         private readonly IRecordStagingRepository recordStagingRepository;
         //private readonly IServiceScopeFactory serviceScopeFactory;
@@ -46,18 +38,17 @@ namespace DataService.Service.RecordService
                     {
                         return new RecordStaging()
                         {
-                            AttendeeCode = data.Attendee.Code,
-                            AttendeeName = data.Attendee.Name,
+                            AttendeeCode = data.AttendeeGroup.AttendeeCode,
                             SessionName = data.Session.Name,
                             SessionStartTime = data.Session.StartTime,
                             SessionEndTime = data.Session.EndTime,
-                            RoomName = data.Session.RoomName,
-                            RtspString = data.Session.RtspString,
-                            GroupCode = data.Session.Group.Code,
-                            GroupName = data.Session.Group.Name,
-                            GroupCreateTime = data.Session.Group.DateTimeCreated,
-                            MaxSessionCount = data.Session.Group.MaxSessionCount,
-                            Present = data.Present
+                            RoomId = data.Session.RoomId,
+                            GroupCode = data.AttendeeGroup.GroupCode,
+                            GroupName = data.AttendeeGroup.Group.Name,
+                            GroupCreateTime = data.AttendeeGroup.Group.DateTimeCreated,
+                            TotalSession = data.AttendeeGroup.Group.TotalSession.Value,
+                            Present = data.Present,
+                            IsEnrollInClass = data.AttendeeGroup.IsActive,
                         };
                     }).ToList();
                     await recordStagingRepository.AddRangeAsync(recordStagings);

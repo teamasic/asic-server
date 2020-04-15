@@ -1,17 +1,14 @@
 ﻿using AsicServer.Core.Constant;
 using AsicServer.Core.Entities;
-using AsicServer.Core.Models;
-using AsicServer.Core.Utils;
 using AsicServer.Core.ViewModels;
+using AsicServer.Core.Utils;
 using AsicServer.Infrastructure;
 using CsvHelper;
 using DataService.Repository;
 using DataService.UoW;
 using DataService.Validation;
 using FirebaseAdmin.Auth;
-using FluentValidation;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -19,7 +16,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DataService.Service.UserService
@@ -75,6 +71,7 @@ namespace DataService.Service.UserService
 
         private async Task<AccessTokenResponse> AuthenticateByFirebaseAsync(FirebaseRegisterExternal external)
         {
+            User user = null;
             using (var trans = unitOfWork.CreateTransaction())
             {
                 AccessTokenResponse token = null;
@@ -97,26 +94,31 @@ namespace DataService.Service.UserService
                     string name = claims["name"] + "";
                     string avatar = claims["picture"] + "";
 
-                    var user = repository.GetUserByUsername(email);
+                    user = repository.GetUserByEmail(email);
+
+                    //add operation is used to minimize effort of testing only
                     if (user == null)
                     {
                         user = new User()
                         {
+                            Code = email, //change attendee code in db if you want
                             Email = email,
-                            Username = email,
-                            Fullname = name,
+                            Name = name,
                             Image = avatar,
                             RoleId = (int)RolesEnum.ATTENDEE
                         };
                         await this.repository.AddAsync(user);
                     }
-                    token = CreateToken(user);
                     trans.Commit();
                 }
                 catch (Exception e)
                 {
                     trans.Rollback();
                     throw e;
+                }
+                if (user != null)
+                {
+                    token = CreateToken(user);
                 }
                 return token;
             }
@@ -134,10 +136,9 @@ namespace DataService.Service.UserService
                 {
                     var newUser = new User()
                     {
-                        Username = user.Email,
                         Email = user.Email,
-                        Fullname = user.Fullname,
-                        RollNumber = user.RollNumber,
+                        Name = user.Fullname,
+                        Code = user.Code,
                         Image = user.Image
                     };
                     newUser.RoleId = (int)RolesEnum.ATTENDEE;
@@ -159,7 +160,7 @@ namespace DataService.Service.UserService
             var userStreams = new Dictionary<string, List<ZipArchiveEntry>>();
             foreach (var user in users)
             {
-                userStreams.Add(user.RollNumber, new List<ZipArchiveEntry>());
+                userStreams.Add(user.Code, new List<ZipArchiveEntry>());
             }
 
             using (ZipArchive archive = new ZipArchive(zipStream))
@@ -185,7 +186,7 @@ namespace DataService.Service.UserService
         private Dictionary<string, List<ZipArchiveEntry>> UnZip(Stream zipStream, User user)
         {
             var userStreams = new Dictionary<string, List<ZipArchiveEntry>>();
-            userStreams.Add(user.RollNumber, new List<ZipArchiveEntry>());
+            userStreams.Add(user.Code, new List<ZipArchiveEntry>());
 
             using (ZipArchive archive = new ZipArchive(zipStream))
             {
@@ -236,15 +237,15 @@ namespace DataService.Service.UserService
             var results = new List<CreateUsersResponse>();
             foreach (var user in usersInDB)
             {
-                if (users.ContainsKey(user.RollNumber))
+                if (users.ContainsKey(user.Code))
                 {
                     var listImages = new List<ZipArchiveEntry>();
-                    users.TryGetValue(user.RollNumber, out listImages);
+                    users.TryGetValue(user.Code, out listImages);
                     var result = new CreateUsersResponse()
                     {
                         Email = user.Email,
-                        RollNumber = user.RollNumber,
-                        Fullname = user.Fullname,
+                        Code = user.Code,
+                        Fullname = user.Name,
                         Image = user.Image,
                         NoImageSaved = listImages.Count
                     };
@@ -265,17 +266,16 @@ namespace DataService.Service.UserService
         {
             var newUser = new User()
             {
-                Username = user.Email,
                 Email = user.Email,
-                Fullname = user.Fullname,
-                RollNumber = user.RollNumber,
+                Name = user.Fullname,
+                Code = user.Code,
                 Image = user.Image
             };
             newUser.RoleId = (int)RolesEnum.ATTENDEE;
             var userInDb = await repository.AddIfNotInDb(newUser);
             var dictionary = UnZip(zipFile.OpenReadStream(), userInDb);
             var listImages = new List<ZipArchiveEntry>();
-            dictionary.TryGetValue(userInDb.RollNumber, out listImages);
+            dictionary.TryGetValue(userInDb.Code, out listImages);
             return listImages.Count > 0;
         }
 

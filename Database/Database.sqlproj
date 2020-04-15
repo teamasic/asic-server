@@ -60,20 +60,20 @@
     <Folder Include="Properties" />
     <Folder Include="dbo\" />
     <Folder Include="dbo\Tables\" />
-    <Folder Include="dbo\Stored Procedures\" />
     <Folder Include="dbo\User Defined Types\" />
+    <Folder Include="dbo\Stored Procedures\" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\Role.sql" />
     <Build Include="dbo\Tables\User.sql" />
-    <Build Include="dbo\Tables\Sessions.sql" />
-    <Build Include="dbo\Tables\Rooms.sql" />
-    <Build Include="dbo\Tables\Records.sql" />
-    <Build Include="dbo\Tables\Groups.sql" />
-    <Build Include="dbo\Tables\ChangeRequests.sql" />
-    <Build Include="dbo\Tables\AttendeeGroups.sql" />
     <Build Include="dbo\Tables\RecordStaging.sql" />
-    <Build Include="dbo\Stored Procedures\MergeRecordStagingInSyncData.sql" />
     <Build Include="dbo\User Defined Types\IntID.sql" />
+    <Build Include="dbo\Tables\Session.sql" />
+    <Build Include="dbo\Tables\Room.sql" />
+    <Build Include="dbo\Tables\Record.sql" />
+    <Build Include="dbo\Tables\Group.sql" />
+    <Build Include="dbo\Tables\ChangeRequest.sql" />
+    <Build Include="dbo\Tables\AttendeeGroup.sql" />
+    <Build Include="dbo\Stored Procedures\MergeRecordStagingInSyncData.sql" />
   </ItemGroup>
 </Project>

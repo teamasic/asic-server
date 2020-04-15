@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AsicServer.Core.Models
+namespace AsicServer.Core.ViewModels
 {
     public class RegisteredUser : BaseViewModel
     {

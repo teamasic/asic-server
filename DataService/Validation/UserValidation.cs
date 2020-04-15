@@ -1,6 +1,6 @@
 ﻿using AsicServer.Core.Constant;
 using AsicServer.Core.Entities;
-using AsicServer.Core.Models;
+using AsicServer.Core.ViewModels;
 using DataService.Repository;
 using FirebaseAdmin.Auth;
 using FluentValidation;

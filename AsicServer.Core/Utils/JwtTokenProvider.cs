@@ -27,11 +27,11 @@ namespace AsicServer.Core.Utils
 
             var claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name ,user.Username),
+                    new Claim(ClaimTypes.NameIdentifier, user.Code.ToString()),
+                    new Claim(ClaimTypes.Name ,user.Email),
+                    new Claim(ClaimTypes.Name ,user.Name),
                 };
-            var role = user.Role.Name;
-            claims.Add(new Claim(ClaimTypes.Role, role));
+            claims.Add(new Claim(ClaimTypes.Role, user.RoleId.ToString()));
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {

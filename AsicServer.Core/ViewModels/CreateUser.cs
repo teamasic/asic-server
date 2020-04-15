@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AsicServer.Core.Models
+namespace AsicServer.Core.ViewModels
 {
     public class CreateUser
     {
@@ -11,8 +11,8 @@ namespace AsicServer.Core.Models
         public string Email { get; set; }
         [Name("fullname")]
         public string Fullname { get; set; }
-        [Name("rollNumber")]
-        public string RollNumber { get; set; }
+        [Name("code")]
+        public string Code { get; set; }
         [Name("image")]
         public string Image { get; set; }
     }
