@@ -71,6 +71,7 @@ namespace DataService.Service.UserService
 
         private async Task<AccessTokenResponse> AuthenticateByFirebaseAsync(FirebaseRegisterExternal external)
         {
+            User user = null;
             using (var trans = unitOfWork.CreateTransaction())
             {
                 AccessTokenResponse token = null;
@@ -93,7 +94,7 @@ namespace DataService.Service.UserService
                     string name = claims["name"] + "";
                     string avatar = claims["picture"] + "";
 
-                    var user = repository.GetUserByEmail(email);
+                    user = repository.GetUserByEmail(email);
 
                     //add operation is used to minimize effort of testing only
                     if (user == null)
@@ -102,19 +103,22 @@ namespace DataService.Service.UserService
                         {
                             Code = email, //change attendee code in db if you want
                             Email = email,
-                            Fullname = name,
+                            Name = name,
                             Image = avatar,
                             RoleId = (int)RolesEnum.ATTENDEE
                         };
                         await this.repository.AddAsync(user);
                     }
-                    token = CreateToken(user);
                     trans.Commit();
                 }
                 catch (Exception e)
                 {
                     trans.Rollback();
                     throw e;
+                }
+                if (user != null)
+                {
+                    token = CreateToken(user);
                 }
                 return token;
             }
@@ -133,7 +137,7 @@ namespace DataService.Service.UserService
                     var newUser = new User()
                     {
                         Email = user.Email,
-                        Fullname = user.Fullname,
+                        Name = user.Fullname,
                         Code = user.Code,
                         Image = user.Image
                     };
@@ -241,7 +245,7 @@ namespace DataService.Service.UserService
                     {
                         Email = user.Email,
                         Code = user.Code,
-                        Fullname = user.Fullname,
+                        Fullname = user.Name,
                         Image = user.Image,
                         NoImageSaved = listImages.Count
                     };
@@ -263,7 +267,7 @@ namespace DataService.Service.UserService
             var newUser = new User()
             {
                 Email = user.Email,
-                Fullname = user.Fullname,
+                Name = user.Fullname,
                 Code = user.Code,
                 Image = user.Image
             };

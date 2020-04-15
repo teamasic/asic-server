@@ -9,7 +9,7 @@ const unloadedState: UserState = {
     successfullyLoaded: false,
     currentUser: {
         code: "",
-        fullname: "",
+        name: "",
         email: "",
         image: ""
     },
