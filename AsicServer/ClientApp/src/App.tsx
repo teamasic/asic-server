@@ -22,11 +22,14 @@ class AppComponent extends React.Component<AppProps> {
 
     constructor(props: any) {
         super(props);
+        if (!this.props.isLogin) {
+            this.props.checkUserInfo();
+        }
     }
 
     public render() {
-        if (!this.props.isLogin) {
-            this.props.checkUserInfo();
+        if (!this.props.successfullyLoaded) {
+            return <></>
         }
         if (this.props.isLogin) {
             console.log(this.props.currentUser);
