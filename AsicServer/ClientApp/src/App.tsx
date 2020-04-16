@@ -48,6 +48,7 @@ class AppComponent extends React.Component<AppProps> {
                 <Layout>
                     <Route exact path={routes.DASHBOARD} component={Dashboard} />
                     <Route exact path={routes.TRAIN_MODEL} component={TrainModel} />
+                    <Route exact path="/" component={Dashboard} />
                 </Layout>
             );
         } else {
