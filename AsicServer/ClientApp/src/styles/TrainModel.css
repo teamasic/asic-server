@@ -1,0 +1,20 @@
+﻿.item .label, .item .result {
+    display: inline-block;
+}
+
+.item .label {
+    margin-right: 5px;
+}
+
+.last-train-result {
+    width: 300px;
+}
+
+.ant-card-head-title {
+    font-weight: bold;
+}
+
+.small {
+    margin-top: 10px;
+    font-size: small;
+}

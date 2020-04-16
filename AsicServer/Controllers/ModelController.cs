@@ -12,6 +12,7 @@ using AttendanceSystemIPCamera.Framework.AppSettingConfiguration;
 using AttendanceSystemIPCamera.Framework.ViewModels;
 using AsicServer.Core.Training;
 using AsicServer.Core.ViewModels;
+using AttendanceSystemIPCamera.Services.RecordService;
 
 namespace AsicServer.Controllers
 {
@@ -20,11 +21,13 @@ namespace AsicServer.Controllers
     public class ModelController : BaseController
     {
         private readonly ITrainingService trainingService;
+        private readonly IGlobalStateService globalStateService;
 
         public ModelController(ExtensionSettings extensionSettings,
-            ITrainingService trainingService) : base(extensionSettings)
+            ITrainingService trainingService, IGlobalStateService globalStateService) : base(extensionSettings)
         {
             this.trainingService = trainingService;
+            this.globalStateService = globalStateService;
         }
 
         [HttpPost("log")]
@@ -34,54 +37,60 @@ namespace AsicServer.Controllers
         }
 
         [HttpPost]
-        public ResponsePython Train()
+        public BaseResponse<ResponsePython> Train()
         {
-            try
+            return ExecuteInMonitoring(() =>
             {
-                return trainingService.Train();
-            }
-            catch (Exception e)
-            {
-                return new ResponsePython
+                if (globalStateService.IsTraining())
                 {
-                    Success = false,
-                    Errors = e.Message
-                };
-            }
+                    throw new Exception("Already training model");
+                }
+                try
+                {
+                    globalStateService.SetTraining(true);
+                    return trainingService.Train();
+                }
+                finally
+                {
+                    globalStateService.SetTraining(false);
+                }
+            });
         }
 
         [HttpPut]
-        public ResponsePython AddEmbeddings(ModifyEmbeddingsViewModel viewModel)
+        public BaseResponse<ResponsePython> AddEmbeddings(ModifyEmbeddingsViewModel viewModel)
         {
-            try
+            return ExecuteInMonitoring(() =>
             {
                 return trainingService.AddEmbeddings(viewModel.Names);
-            }
-            catch (Exception e)
-            {
-                return new ResponsePython
-                {
-                    Success = false,
-                    Errors = e.Message
-                };
-            }
+            });
         }
 
-        [HttpPost("remove")] // HttpDelete doesn't allow body
-        public ResponsePython RemoveEmbeddings(ModifyEmbeddingsViewModel viewModel)
+        [HttpDelete]
+        public BaseResponse<ResponsePython> RemoveEmbeddings(ModifyEmbeddingsViewModel viewModel)
         {
-            try
+            return ExecuteInMonitoring(() =>
             {
                 return trainingService.RemoveEmbeddings(viewModel.Names);
-            }
-            catch (Exception e)
+            });
+        }
+
+        [HttpGet("last-result")]
+        public BaseResponse<TrainResultViewModel> GetLastTrainingResult()
+        {
+            return ExecuteInMonitoring(() =>
             {
-                return new ResponsePython
-                {
-                    Success = false,
-                    Errors = e.Message
-                };
-            }
+                return trainingService.GetLastTrainingResult();
+            });
+        }
+
+        [HttpGet("is-training")]
+        public BaseResponse<bool> IsTraining()
+        {
+            return ExecuteInMonitoring(() =>
+            {
+                return globalStateService.IsTraining();
+            });
         }
     }
 }

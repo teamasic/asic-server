@@ -3,6 +3,7 @@ import { Container } from 'reactstrap';
 import NavMenu from './NavMenu';
 import { Layout, Menu, Breadcrumb, Icon, Divider, Row, Col } from 'antd';
 import '../styles/Layout.css';
+import classNames from 'classnames';
 import { constants } from '../constants/constant';
 import * as firebase from '../firebase';
 import { UserState } from '../store/user/userState';
@@ -50,8 +51,12 @@ class PageLayout extends React.Component<
 					<div className="logo">ASIC</div>
 					<Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
 						<Menu.Item key="1">
-							<Icon type="hdd" />
-							<span>Your groups</span>
+							<Icon type="user" />
+							<div className="link-container">
+								<Link to="/dashboard">
+									Manage users
+								</Link>
+							</div>
 						</Menu.Item>
 						<Menu.Item key="train">
 							<Icon type="sync" />
@@ -67,7 +72,10 @@ class PageLayout extends React.Component<
 						</Menu.Item>
 					</Menu>
 				</Sider>
-				<Layout>
+				<Layout className={classNames({
+					'inner-layout': true,
+					'with-sidebar-collapsed': this.state.collapsed
+				})}>
 					<Content className="content">
 						{this.props.children}
 					</Content>

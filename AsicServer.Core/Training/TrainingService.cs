@@ -1,6 +1,7 @@
 ﻿using AsicServer.Core.ViewModels;
 using AsicServer.Infrastructure;
 using AttendanceSystemIPCamera.Framework.AppSettingConfiguration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,6 +16,7 @@ namespace AsicServer.Core.Training
         public ResponsePython Train();
         public ResponsePython AddEmbeddings(ICollection<string> names);
         public ResponsePython RemoveEmbeddings(ICollection<string> names);
+        public TrainResultViewModel GetLastTrainingResult();
     }
     public class TrainingService: ITrainingService
     {
@@ -31,7 +33,8 @@ namespace AsicServer.Core.Training
         {
             Go(Augment());
             Go(ExtractEmbeddings());
-            return TrainModelToFile();
+            var response = TrainModelToFile();
+            return response;
         }
         public ResponsePython AddEmbeddings(ICollection<string> names)
         {
@@ -140,6 +143,16 @@ namespace AsicServer.Core.Training
                 Names = names
             });
             return ProcessStarter.Start(startInfo);
+        }
+        public TrainResultViewModel GetLastTrainingResult()
+        {
+            var currentDirectory = Environment.CurrentDirectory;
+            var parentDirectory = Directory.GetParent(currentDirectory).FullName;
+            var fileDest = Path.Join(parentDirectory,
+                myConfiguration.RecognitionServiceName, myConfiguration.LastTrainedFilePath);
+            using StreamReader file = File.OpenText(fileDest);
+            JsonSerializer serializer = new JsonSerializer();
+            return (TrainResultViewModel) serializer.Deserialize(file, typeof(TrainResultViewModel));
         }
         #endregion
     }

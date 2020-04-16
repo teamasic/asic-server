@@ -18,5 +18,6 @@ namespace AttendanceSystemIPCamera.Framework.AppSettingConfiguration
         public string TrainModelProgramPath { get; set; }
         public string AddEmbeddingsProgramPath { get; set; }
         public string RemoveEmbeddingsProgramPath { get; set; }
+        public string LastTrainedFilePath { get; set; }
     }
 }

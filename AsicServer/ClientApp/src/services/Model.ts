@@ -18,9 +18,20 @@ export const addEmbeddings = async (codes: string[]): Promise<ApiResponse> => {
 };
 
 export const removeEmbeddings = async (codes: string[]): Promise<ApiResponse> => {
-    const response = await axios.post(apify('remove'), {
-        codes
+    const response = await axios.delete(baseRoute, {
+        data: {
+            codes
+        }
     });
     return await response.data;
 };
 
+export const getLastTrainResult = async (): Promise<ApiResponse> => {
+    const response = await axios.get(apify('last-result'));
+    return await response.data;
+};
+
+export const getIsTraining = async (): Promise<ApiResponse> => {
+    const response = await axios.get(apify('is-training'));
+    return await response.data;
+};

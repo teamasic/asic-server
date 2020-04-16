@@ -24,6 +24,8 @@ using AttendanceSystemIPCamera.Framework.AppSettingConfiguration;
 using AsicServer.Core.Training;
 using DataService.Service.UserService;
 using DataService.Service.RecordService;
+using AsicServer.Core.GlobalState;
+using AttendanceSystemIPCamera.Services.RecordService;
 
 namespace AsicServer
 {
@@ -58,6 +60,7 @@ namespace AsicServer
             SetupDI(services);
             SetupFirebaseAuthentication(services);
             SetupMyConfiguration(services);
+            SetupGlobalStateManager(services);
         }
 
         private void SetupFirebaseAuthentication(IServiceCollection services)
@@ -159,6 +162,7 @@ namespace AsicServer
             services.AddScoped<ProcessStartInfoFactory>();
             services.AddScoped<IRecordService, RecordService>();
             services.AddScoped<IRecordStagingRepository, RecordStagingRepository>();
+            services.AddScoped<IGlobalStateService, GlobalStateService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -209,6 +213,11 @@ namespace AsicServer
             //    }
             //});
 
+        }
+        private void SetupGlobalStateManager(IServiceCollection services)
+        {
+            var globalState = new GlobalState();
+            services.AddSingleton(globalState);
         }
     }
 }

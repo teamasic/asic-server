@@ -5,12 +5,14 @@ import time
 import cv2
 import imutils
 import numpy as np
+import json
 from imutils import paths
 from sklearn import svm
 from sklearn.preprocessing import LabelEncoder
+from datetime import datetime
 
 from config import my_constant
-from helper import my_face_detection, my_face_recognition, my_face_generator
+from helper import my_face_detection, my_face_recognition, my_face_generator, recognition_api
 
 
 def recognize_image(imagePath, threshold=0):
@@ -158,6 +160,13 @@ def generate_train_model(outputDir):
     f.write(pickle.dumps(recognizer_model))
     f.close()
 
+    attendee_count = len(set(data["names"]))
+    image_count = len(data["embeddings"])
+    result_dict = {"attendeeCount": attendee_count, "imageCount": image_count, "timeFinished": datetime.now().isoformat()}
+    f_result = open(my_constant.resultFile, "w+")
+    f_result.write(json.dumps(result_dict))
+    f_result.close()
+
 
 def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
     onlyTrainSomePeople = False
@@ -176,6 +185,7 @@ def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
     name_batch = []
     count = genImageNum  # generate 4 fake images for 1 raw image
 
+    print(imagePaths)
     # loop over the image paths
     for (i, imagePath) in enumerate(imagePaths):
         # extract the person name from the image path
