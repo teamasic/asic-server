@@ -12,6 +12,7 @@ import { ApplicationState } from '../store';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { Link, withRouter } from 'react-router-dom';
+import MenuBar from './MenuBar';
 
 const { Header, Sider, Content, Footer } = Layout;
 type LayoutProps =
@@ -37,7 +38,7 @@ class PageLayout extends React.Component<
 	};
 
 	render() {
-		return (<>{this.props.isLogin ? this.renderLayout() : this.renderEmty()}</>);
+		return (<>{this.props.isLogin && this.props.successfullyLoaded ? this.renderLayout() : this.renderEmty()}</>);
 	}
 	private renderLayout() {
 		return (
@@ -76,6 +77,7 @@ class PageLayout extends React.Component<
 					'inner-layout': true,
 					'with-sidebar-collapsed': this.state.collapsed
 				})}>
+					<MenuBar />
 					<Content className="content">
 						{this.props.children}
 					</Content>

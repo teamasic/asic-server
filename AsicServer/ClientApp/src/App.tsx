@@ -24,6 +24,9 @@ class AppComponent extends React.Component<AppProps> {
 
     constructor(props: any) {
         super(props);
+        if (!this.props.isLogin) {
+            this.props.checkUserInfo();
+        }
     }
 
     componentDidMount() {
