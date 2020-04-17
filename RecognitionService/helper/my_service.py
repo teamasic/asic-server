@@ -50,7 +50,8 @@ def _get_label(vec, threshold=0):
 
 def generate_more_embeddings(datasetPath, outputDir, alignFace=False):
     imagePaths = list(paths.list_images(datasetPath))
-    data = pickle.loads(open(my_constant.embeddingsPath, "rb").read())
+    embeddingsPath = os.path.join(outputDir, my_constant.embeddingsPath)
+    data = pickle.loads(open(embeddingsPath, "rb").read())
     knownEmbeddings = data["embeddings"]
     knownNames = data["names"]
     totalAdded = 0
@@ -63,6 +64,7 @@ def generate_more_embeddings(datasetPath, outputDir, alignFace=False):
 
         # load the image
         image = cv2.imread(imagePath)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         boxes = my_face_detection.face_locations(image)
         if len(boxes) > 1:
             print(imagePath, "> 1")
@@ -86,8 +88,8 @@ def generate_more_embeddings(datasetPath, outputDir, alignFace=False):
     print("[INFO] serializing more {} encodings...".format(totalAdded))
     print("[INFO] serializing total {} encodings...".format(len(knownEmbeddings)))
     data = {"embeddings": knownEmbeddings, "names": knownNames}
-    path = os.path.join(outputDir, my_constant.embeddingsPath)
-    f = open(path, "wb+")
+    # path = os.path.join(outputDir, my_constant.embeddingsPath)
+    f = open(embeddingsPath, "wb+")
     f.write(pickle.dumps(data))
     f.close()
 

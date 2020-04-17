@@ -6,7 +6,7 @@ from helper import my_service
 # import the necessary packages
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--dataset", default="dataset",
+ap.add_argument("-i", "--dataset", default="dataset_more",
                 help="path to input directory of faces + images")
 ap.add_argument("-o", "--output", default="augmented",
                 help="path to output directory of augmented images")
