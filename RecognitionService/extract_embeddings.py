@@ -3,7 +3,7 @@ import argparse
 from helper import my_service
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--dataset", default="dataset",
+ap.add_argument("-i", "--dataset", default="augmented",
                 help="path to input directory of faces + images")
 ap.add_argument("-o", "--output", default="output_dlib",
                 help="path to output directory of embedding and model files")

@@ -7,7 +7,7 @@ import imutils
 import numpy as np
 import json
 from imutils import paths
-from sklearn import svm
+from sklearn import svm, linear_model
 from sklearn.preprocessing import LabelEncoder
 from datetime import datetime
 
@@ -104,8 +104,9 @@ def generate_embeddings(datasetPath, outputDir, alignFace=False):
 
         name = imagePath.split(cv2.os.path.sep)[-2]
 
-        # load the image
+        # load the image and convert to rbg image because dlib use rgb image
         image = cv2.imread(imagePath)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         boxes = my_face_detection.face_locations(image)
         if len(boxes) > 1:
             print(imagePath, "> 1")
@@ -115,7 +116,7 @@ def generate_embeddings(datasetPath, outputDir, alignFace=False):
             print(imagePath, "= 0")
             print(len(boxes))
             continue
-        if (alignFace == True):
+        if alignFace == True:
             aligned_image = my_face_detection.align_face(image, boxes[0])
             vecs = my_face_recognition.face_encodings(aligned_image)
         else:
@@ -162,7 +163,8 @@ def generate_train_model(outputDir):
 
     attendee_count = len(set(data["names"]))
     image_count = len(data["embeddings"])
-    result_dict = {"attendeeCount": attendee_count, "imageCount": image_count, "timeFinished": datetime.now().isoformat()}
+    result_dict = {"attendeeCount": attendee_count, "imageCount": image_count,
+                   "timeFinished": datetime.now().isoformat()}
     f_result = open(my_constant.resultFile, "w+")
     f_result.write(json.dumps(result_dict))
     f_result.close()
@@ -185,7 +187,6 @@ def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
     name_batch = []
     count = genImageNum  # generate 4 fake images for 1 raw image
 
-    print(imagePaths)
     # loop over the image paths
     for (i, imagePath) in enumerate(imagePaths):
         # extract the person name from the image path
@@ -198,7 +199,6 @@ def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
             # load the image, resize it to have a width of 400 pixels (while
             # maintaining the aspect ratio)
             image = cv2.imread(imagePath)
-            image = imutils.resize(image, width=400)
             if name == "unknown":
                 unknown_batch.append(image)
             else:
@@ -211,10 +211,11 @@ def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
     # add all augmented images into a dictionary
     name_image_dict = dict()
     for name, image in zip(name_batch, augmented_batch):
+
         if name in name_image_dict:
             name_image_dict[name].append(image)
         else:
-            name_image_dict[name] = []
+            name_image_dict[name] = [image]
     # add all unknown images into the dictionary
     name_image_dict["unknown"] = unknown_batch
 
@@ -222,13 +223,13 @@ def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
         # only remove specified people's folders
         for name in name_image_dict.keys():
             shutil.rmtree(os.path.sep.join([augmented_path, name]))
-            time.sleep(1) # Delays for 1 second because shutil functions are async and may block os.mkdir
+            time.sleep(1)  # Delays for 1 second because shutil functions are async and may block os.mkdir
             os.mkdir(os.path.sep.join([augmented_path, name]))
     else:
         # remove the entire folder and build it new again    
         if os.path.exists(augmented_path):
             shutil.rmtree(augmented_path)
-            time.sleep(1) # Delays for 1 second because shutil functions are async and may block os.mkdir
+            time.sleep(1)  # Delays for 1 second because shutil functions are async and may block os.mkdir
         os.mkdir(augmented_path)
         for name in name_image_dict.keys():
             os.mkdir(os.path.sep.join([augmented_path, name]))
@@ -262,7 +263,6 @@ def add_embeddings(datasetPath, outputDir, embeddingsInputDir, nameString, align
 
     filteredKnownEmbeddings = [emb for i, emb in enumerate(knownEmbeddings) if i in filteredKnownNamesIndex]
     # end remove
-
 
     for (i, imagePath) in enumerate(imagePaths):
         # extract the person name from the image path
@@ -342,3 +342,37 @@ def remove_embeddings(datasetPath, outputDir, embeddingsInputDir, nameString, al
     f = open(path, "wb+")
     f.write(pickle.dumps(data))
     f.close()
+
+
+def generate_train_model_softmax(outputDir):
+    print("[INFO] loading face embeddings...")
+    embeddingsPath = os.path.join(outputDir, my_constant.embeddingsPath)
+    data = pickle.loads(open(embeddingsPath, "rb").read())
+
+    # encode the labels
+    print("[INFO] encoding labels...")
+    le = LabelEncoder()
+    labels = le.fit_transform(data["names"])
+
+    # train the model used to accept the 128-d embeddings of the face and
+    # then produce the actual face recognition
+    print("[INFO] training model...")
+    recognizer = linear_model.LogisticRegression(C=1e5,
+                                             solver='lbfgs', multi_class='multinomial')
+    recognizer.fit(data["embeddings"], labels)
+
+    # write the actual face recognition model to disk
+
+    recognizer_model = {"recognizer": recognizer, "le": le}
+    path = os.path.join(outputDir, my_constant.recognizerModelPath)
+    f = open(path, "wb+")
+    f.write(pickle.dumps(recognizer_model))
+    f.close()
+
+    attendee_count = len(set(data["names"]))
+    image_count = len(data["embeddings"])
+    result_dict = {"attendeeCount": attendee_count, "imageCount": image_count,
+                   "timeFinished": datetime.now().isoformat()}
+    f_result = open(my_constant.resultFile, "w+")
+    f_result.write(json.dumps(result_dict))
+    f_result.close()

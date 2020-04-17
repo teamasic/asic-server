@@ -8,4 +8,4 @@ ap.add_argument("-o", "--output", default="output_dlib",
 args = vars(ap.parse_args())
 
 
-my_service.generate_train_model(args["output"])
+my_service.generate_train_model_softmax(args["output"])
