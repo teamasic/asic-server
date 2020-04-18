@@ -13,5 +13,6 @@ namespace AsicServer.Infrastructure
         public string Audience { get; set; }
         public string Issuer { get; set; }
         public string FirebaseConfigurationFile { get; set; }
+        public string PythonExeFullPath { get; set; }
     }
 }

@@ -4,4 +4,5 @@ export const routes = {
     DEFAULT: "/",
     DASHBOARD: "/dashboard",
     HOME: "/home",
+    TRAIN_MODEL: '/train-model'
 }
