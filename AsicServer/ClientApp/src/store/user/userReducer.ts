@@ -9,7 +9,7 @@ const unloadedState: UserState = {
     successfullyLoaded: false,
     currentUser: {
         code: "",
-        fullname: "",
+        name: "",
         email: "",
         image: ""
     },
@@ -35,7 +35,7 @@ const reducers: Reducer<UserState> = (state: UserState | undefined, incomingActi
             return {
                 ...state,
                 isLoading: false,
-                successfullyLoaded: false,
+                successfullyLoaded: true,
                 isLogin: false,
                 errors: action.errors
                 
@@ -53,12 +53,15 @@ const reducers: Reducer<UserState> = (state: UserState | undefined, incomingActi
         case ACTIONS.USER_INFO_NOT_IN_LOCAL:
             return {
                 ...state,
-                isLogin: false
+                isLogin: false,
+                isLoading: false,
+                successfullyLoaded: true
             }
         case ACTIONS.LOG_OUT:
             return {
                 ...state,
                 ...unloadedState,
+                successfullyLoaded: true
             }
     }
 

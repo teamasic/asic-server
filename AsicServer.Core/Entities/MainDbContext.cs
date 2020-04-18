@@ -49,13 +49,13 @@ namespace AsicServer.Core.Entities
 
                 entity.Property(e => e.IsActive).HasDefaultValueSql("((1))");
 
-                entity.HasOne(d => d.AttendeeCodeNavigation)
+                entity.HasOne(d => d.Attendee)
                     .WithMany(p => p.AttendeeGroup)
                     .HasForeignKey(d => d.AttendeeCode)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_AttendeeGroups_User");
 
-                entity.HasOne(d => d.GroupCodeNavigation)
+                entity.HasOne(d => d.Group)
                     .WithMany(p => p.AttendeeGroup)
                     .HasForeignKey(d => d.GroupCode)
                     .OnDelete(DeleteBehavior.ClientSetNull)
@@ -127,21 +127,13 @@ namespace AsicServer.Core.Entities
                     .HasMaxLength(50)
                     .IsUnicode(false);
 
-                entity.Property(e => e.AttendeeName).HasMaxLength(255);
-
                 entity.Property(e => e.GroupCode).HasMaxLength(50);
 
                 entity.Property(e => e.GroupCreateTime).HasColumnType("datetime");
 
                 entity.Property(e => e.GroupName).HasMaxLength(255);
 
-                entity.Property(e => e.RoomName)
-                    .HasMaxLength(50)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.RtspString)
-                    .HasMaxLength(255)
-                    .IsUnicode(false);
+                entity.Property(e => e.RoomId).HasColumnType("int");
 
                 entity.Property(e => e.SessionEndTime).HasColumnType("datetime");
 
@@ -216,7 +208,7 @@ namespace AsicServer.Core.Entities
                     .HasMaxLength(50)
                     .IsUnicode(false);
 
-                entity.Property(e => e.Fullname)
+                entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(50);
 
