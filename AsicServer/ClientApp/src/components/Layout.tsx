@@ -15,6 +15,7 @@ import { Link, withRouter } from 'react-router-dom';
 import MenuBar from './MenuBar';
 
 const { Header, Sider, Content, Footer } = Layout;
+
 type LayoutProps =
 	UserState &
 	typeof userActionCreators; // ... plus incoming routing parameters
@@ -52,20 +53,20 @@ class PageLayout extends React.Component<
 					<div className="logo">ASIC</div>
 					<Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
 						<Menu.Item key="1">
-							<Icon type="user" />
-							<div className="link-container">
+							<Icon type="team" />
+							<span className="link-container">
 								<Link to="/dashboard">
 									Manage users
 								</Link>
-							</div>
+							</span>
 						</Menu.Item>
 						<Menu.Item key="train">
-							<Icon type="sync" />
-							<div className="link-container">
+							<Icon type="sync"/>
+							<span className="link-container">
 								<Link to="/train-model">
 									Train model
 								</Link>
-							</div>
+							</span>
 						</Menu.Item>
 						<Menu.Item key="3" onClick={(e) => this.logout()}>
 							<Icon type="logout" />
