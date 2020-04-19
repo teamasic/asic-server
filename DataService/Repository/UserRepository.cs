@@ -41,10 +41,14 @@ namespace DataService.Repository
             {
                 foreach (var user in users)
                 {
-                    var userInDb = GetUserByEmail(user.Email);
+                    var userInDb = GetByAttendeeCode(user.Code);
                     if(userInDb == null)
                     {
-                        dbContext.Add(user);
+                        userInDb = GetByEmail(user.Email);
+                        if(userInDb == null)
+                        {
+                            dbContext.Add(user);
+                        }
                     }
                 }
             } catch (Exception e)
