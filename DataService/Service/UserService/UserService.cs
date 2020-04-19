@@ -17,6 +17,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using AttendanceSystemIPCamera.Framework.AppSettingConfiguration;
 
 namespace DataService.Service.UserService
 {
@@ -27,19 +28,23 @@ namespace DataService.Service.UserService
         List<CreateUsersResponse> CreateMultipleUsers(IFormFile csvFile, IFormFile zipFile);
         Task<bool> CreateSingleUser(IFormFile zipFile, CreateUser user);
         UserViewModel GetByEmail(string email);
+        List<UserViewModel> GetByCodes(string codes);
     }
 
     public class UserService : BaseService<User>, IUserService
     {
         private readonly JwtTokenProvider jwtTokenProvider;
         private readonly IUserRepository repository;
+        private readonly MyConfiguration configuration;
 
         public UserService(IUserRepository repository,
                             UnitOfWork unitOfWork,
-                            JwtTokenProvider jwtTokenProvider) : base(unitOfWork)
+                            JwtTokenProvider jwtTokenProvider,
+                            MyConfiguration configuration) : base(unitOfWork)
         {
             this.jwtTokenProvider = jwtTokenProvider;
             this.repository = repository;
+            this.configuration = configuration;
         }
 
         public async Task<AccessTokenResponse> Authenticate(UserAuthentication userAuthen)
@@ -210,13 +215,15 @@ namespace DataService.Service.UserService
 
         private void ExtrectToFile(Dictionary<string, List<ZipArchiveEntry>>.ValueCollection values)
         {
+            var directory = configuration.DatasetFolderPath;
+            var directoryInfo = new DirectoryInfo(Path.GetFullPath(directory));
+            directoryInfo.Delete(true);
             foreach (var item in values)
             {
                 foreach (var entry in item)
                 {
-                    var directory = Directory.GetCurrentDirectory() + "\\Dataset";
-                    if (!directory.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
-                        directory += Path.DirectorySeparatorChar;
+                    //if (!directory.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+                    //    directory += Path.DirectorySeparatorChar;
                     string destinationPath = Path.GetFullPath(Path.Combine(directory, entry.FullName));
                     if (destinationPath.EndsWith("\\"))
                     {
@@ -299,6 +306,21 @@ namespace DataService.Service.UserService
                 throw new BaseException(ErrorMessage.NOT_AUTHORIZED_USER);
             }
             return result;
+        }
+
+        public List<UserViewModel> GetByCodes(string codes)
+        {
+            var listCodes = codes.Split(',').ToList();
+            var viewModels = new List<UserViewModel>();
+            if(listCodes.Count > 0)
+            {
+                var users = repository.GetByCodes(listCodes);
+                foreach (var user in users)
+                {
+                    viewModels.Add(AutoMapper.Mapper.Map<UserViewModel>(user));
+                }
+            }
+            return viewModels;
         }
     }
 }

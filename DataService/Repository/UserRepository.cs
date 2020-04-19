@@ -15,6 +15,7 @@ namespace DataService.Repository
         Task<User> AddIfNotInDb(User user);
         bool IsExisted(string username);
         User GetByEmail(string email);
+        List<User> GetByCodes(List<string> codes);
     }
 
     public class UserRepository : BaseRepository<User>, IUserRepository
@@ -40,10 +41,14 @@ namespace DataService.Repository
             {
                 foreach (var user in users)
                 {
-                    var userInDb = GetUserByEmail(user.Email);
+                    var userInDb = GetByAttendeeCode(user.Code);
                     if(userInDb == null)
                     {
-                        dbContext.Add(user);
+                        userInDb = GetByEmail(user.Email);
+                        if(userInDb == null)
+                        {
+                            dbContext.Add(user);
+                        }
                     }
                 }
             } catch (Exception e)
@@ -77,6 +82,11 @@ namespace DataService.Repository
         {
             var user = this.Get(acc => string.Equals(acc.Email, email)).FirstOrDefault();
             return user != null;
+        }
+
+        public List<User> GetByCodes(List<string> codes)
+        {
+            return Get(u => codes.Contains(u.Code)).ToList();
         }
     }
 }

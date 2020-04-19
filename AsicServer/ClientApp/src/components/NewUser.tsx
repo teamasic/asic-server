@@ -10,6 +10,7 @@ import { bindActionCreators } from 'redux';
 import { ApplicationState } from '../store';
 import { FormComponentProps } from 'antd/lib/form';
 import User from '../models/User';
+import { constants } from '../constants/constant';
 
 const { Dragger } = Upload;
 
@@ -40,13 +41,15 @@ const ERR_MESSAGE = {
 
 const FILE_TYPE = {
     CSV: 'application/vnd.ms-excel',
-    ZIP: 'application/zip'
+    ZIP: 'application/zip',
+    X_ZIP: 'application/x-zip-compressed'
 }
 
 interface ComponentState {
     tabKey: string,
     importUsers: any,
-    page: number,
+    currentPage: number,
+    pageSize: number,
     msgImportCSV: string,
     msgImportMultipleZIP: string,
     msgImportSingleZIP: string,
@@ -70,7 +73,8 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
         this.state = {
             tabKey: 'multiple',
             importUsers: [],
-            page: 1,
+            currentPage: 1,
+            pageSize: constants.TABLE_DEFAULT_PAGE_SIZE,
             msgImportCSV: ' ',
             msgImportMultipleZIP: ' ',
             msgImportSingleZIP: ' ',
@@ -91,11 +95,24 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
 
     private onPageChange = (page: number) => {
         this.setState({
-            page: page
+            currentPage: page
         })
     }
 
+    private onShowSizeChange = (current: number, pageSize: number) => {
+        this.setState({
+            pageSize: pageSize,
+            currentPage: current
+        });
+    }
+
     private validateBeforeUpload = (file: File, fileType: string): boolean | Promise<void> => {
+        // Check zip file format
+        if(fileType === FILE_TYPE.ZIP) {
+            if(file.type === FILE_TYPE.X_ZIP) {
+                fileType = file.type;
+            }
+        }
         if (file.type !== fileType) {
             switch (fileType) {
                 case FILE_TYPE.CSV:
@@ -114,7 +131,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
             }
             return false;
         }
-        if (fileType === FILE_TYPE.ZIP) {
+        if (fileType === FILE_TYPE.ZIP || fileType === FILE_TYPE.X_ZIP) {
             switch (this.state.tabKey) {
                 case TAB_KEY.MULTIPLE:
                     this.setState({ multipleZipFile: file });
@@ -172,7 +189,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
     }
 
     private onZipFileChange = (info: any) => {
-        if (info.file.type === FILE_TYPE.ZIP) {
+        if (info.file.type === FILE_TYPE.ZIP || info.file.type === FILE_TYPE.X_ZIP) {
             var status = info.file.status;
             switch (this.state.tabKey) {
                 case TAB_KEY.MULTIPLE:
@@ -333,7 +350,9 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                 title: "#",
                 key: "index",
                 width: '5%',
-                render: (text: any, record: any, index: number) => (this.state.page - 1) * 5 + index + 1
+                render: (text: any, record: any, index: number) => {
+                    return (this.state.currentPage - 1) * this.state.pageSize + index + 1
+                }
             },
             {
                 title: 'Email',
@@ -416,10 +435,12 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                 bordered
                                 rowClassName={renderStripedTable}
                                 pagination={{
-                                    pageSize: 10,
+                                    pageSize: this.state.pageSize,
                                     total: this.state.importUsers !== undefined ? this.state.importUsers.length : 0,
                                     showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} of ${total} rows`,
-                                    onChange: this.onPageChange
+                                    onChange: this.onPageChange,
+                                    showSizeChanger: true,
+                                    onShowSizeChange: this.onShowSizeChange
                                 }}
                             />
                         </Row>
