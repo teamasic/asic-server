@@ -183,7 +183,7 @@ namespace DataService.Service.UserService
                         }
                     }
                 }
-                ExtrectToFile(userStreams.Values);
+                ExtrectToFile(userStreams.Values, false);
             }
             return userStreams;
         }
@@ -208,16 +208,19 @@ namespace DataService.Service.UserService
                         }
                     }
                 }
-                ExtrectToFile(userStreams.Values);
+                ExtrectToFile(userStreams.Values, true);
             }
             return userStreams;
         }
 
-        private void ExtrectToFile(Dictionary<string, List<ZipArchiveEntry>>.ValueCollection values)
+        private void ExtrectToFile(Dictionary<string, List<ZipArchiveEntry>>.ValueCollection values, bool isAppendedFile)
         {
             var directory = configuration.DatasetFolderPath;
-            var directoryInfo = new DirectoryInfo(Path.GetFullPath(directory));
-            directoryInfo.Delete(true);
+            if(!isAppendedFile)
+            {
+                var directoryInfo = new DirectoryInfo(Path.GetFullPath(directory));
+                directoryInfo.Delete(true);
+            }
             foreach (var item in values)
             {
                 foreach (var entry in item)
