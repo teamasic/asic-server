@@ -34,33 +34,36 @@ namespace DataService.Service.RecordService
             {
                 try
                 {
-                    var recordStagings = attendanceData.Select(data =>
+                    if(attendanceData.Count > 0)
                     {
-                        return new RecordStaging()
+                        var recordStagings = attendanceData.Select(data =>
                         {
-                            AttendeeCode = data.AttendeeGroup.AttendeeCode,
-                            SessionName = data.Session.Name,
-                            SessionStartTime = data.Session.StartTime,
-                            SessionEndTime = data.Session.EndTime,
-                            RoomId = data.Session.RoomId,
-                            GroupCode = data.AttendeeGroup.GroupCode,
-                            GroupName = data.AttendeeGroup.Group.Name,
-                            GroupCreateTime = data.AttendeeGroup.Group.DateTimeCreated,
-                            TotalSession = data.AttendeeGroup.Group.TotalSession.Value,
-                            Present = data.Present,
-                            IsEnrollInClass = data.AttendeeGroup.IsActive,
-                        };
-                    }).ToList();
-                    await recordStagingRepository.AddRangeAsync(recordStagings);
+                            return new RecordStaging()
+                            {
+                                AttendeeCode = data.AttendeeGroup.AttendeeCode,
+                                SessionName = data.Session.Name,
+                                SessionStartTime = data.Session.StartTime,
+                                SessionEndTime = data.Session.EndTime,
+                                RoomId = data.Session.RoomId,
+                                GroupCode = data.AttendeeGroup.GroupCode,
+                                GroupName = data.AttendeeGroup.Group.Name,
+                                GroupCreateTime = data.AttendeeGroup.Group.DateTimeCreated,
+                                TotalSession = data.AttendeeGroup.Group.TotalSession.Value,
+                                Present = data.Present,
+                                IsEnrollInClass = data.AttendeeGroup.IsActive,
+                            };
+                        }).ToList();
+                        await recordStagingRepository.AddRangeAsync(recordStagings);
 
-                    //merge statement
-                    var ids = recordStagings.Select(r => r.Id);
-                    int rowsAffected = recordStagingRepository.MergeRecordStagingInSyncData(Utils.GetTableType(ids));
-                    Logger.Debug($"{rowsAffected} is affected");
+                        //merge statement
+                        var ids = recordStagings.Select(r => r.Id);
+                        int rowsAffected = recordStagingRepository.MergeRecordStagingInSyncData(Utils.GetTableType(ids));
+                        Logger.Debug($"{rowsAffected} is affected");
 
-                    //remove 
-                    //recordStagingRepository.DeleteRange(recordStagings);
-                    trans.Commit();
+                        //remove 
+                        //recordStagingRepository.DeleteRange(recordStagings);
+                        trans.Commit();
+                    }
                 }
                 catch (Exception e)
                 {
