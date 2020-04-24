@@ -32,10 +32,12 @@ export const warning = (msg: string) => {
     });
 }
 
-export const getErrors = (errors: any[])=>{
+export const getErrors = (errors: any[]) => {
     const values = []
-    for(const key in errors){
-        values.push(errors[key]);
+    for (const key in errors) {
+        if (key !== "$id") {
+            values.push(errors[key]);
+        }
     }
     return values.toString();
 }
