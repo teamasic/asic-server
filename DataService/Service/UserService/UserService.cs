@@ -219,7 +219,10 @@ namespace DataService.Service.UserService
             if(!isAppendedFile)
             {
                 var directoryInfo = new DirectoryInfo(Path.GetFullPath(directory));
-                directoryInfo.Delete(true);
+                if (directoryInfo.Exists)
+                {
+                    directoryInfo.Delete(true);
+                }
             }
             foreach (var item in values)
             {
