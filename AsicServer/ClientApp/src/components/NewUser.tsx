@@ -456,7 +456,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                     <p className="ant-upload-drag-icon">
                                         {this.state.uploadingMultipleZIPFile === true ?
                                             (<Icon type="loading" />) :
-                                            (<Icon type="inbox" />)
+                                            (<Icon type="file-zip" />)
                                         }
                                     </p>
                                     <p className="ant-upload-text">Click or drag file to this area to upload</p>
@@ -544,7 +544,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                     <p className="ant-upload-drag-icon">
                                         {this.state.uploadingSingleZIPFile === true ?
                                             (<Icon type="loading" />) :
-                                            (<Icon type="inbox" />)
+                                            (<Icon type="file-zip" />)
                                         }
                                     </p>
                                     <p className="ant-upload-text">Click or drag file to this area to upload</p>
