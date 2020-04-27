@@ -55,7 +55,8 @@ class PageLayout extends React.Component<
 							src="asiclogo.jpg"
 							style={{
 								backgroundSize: 'contain',
-								backgroundPosition: 'center'
+								backgroundPosition: 'center',
+								borderRadius: '5px'
 							}} />
 					</div>
 					<Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
