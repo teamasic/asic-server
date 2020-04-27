@@ -34,6 +34,11 @@ namespace DataService.Service.RecordService
             {
                 try
                 {
+                    //select attendees distinct in the list
+                    //remove all records which attendee is not exist
+                    //select room distinct in list
+                    //remove all records in the sessions that room is not exist
+                    // => Không nên check attendee, vì những trường hợp không sync được dễ dẫn đến bất thường
                     if(attendanceData.Count > 0)
                     {
                         var recordStagings = attendanceData.Select(data =>

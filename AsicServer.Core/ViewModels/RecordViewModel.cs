@@ -21,7 +21,7 @@ namespace AsicServer.Core.ViewModels
         [Required]
         public SessionInSyncData Session { get; set; }
         [Required]
-        public AttendeeGroupViewModel AttendeeGroup { get; set; }
+        public AttendeeGroupInSyncViewModel AttendeeGroup { get; set; }
         [Required]
         public bool Present { get; set; }
         public DateTime? UpdateTime { get; set; }

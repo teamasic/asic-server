@@ -26,6 +26,7 @@ using DataService.Service.UserService;
 using DataService.Service.RecordService;
 using AsicServer.Core.GlobalState;
 using AttendanceSystemIPCamera.Services.RecordService;
+using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 
 namespace AsicServer
 {
@@ -203,15 +204,15 @@ namespace AsicServer
 
             loggerFactory.AddFile("Logs/server-log-{Date}.txt");
 
-            //app.UseSpa(spa =>
-            //{
-            //    spa.Options.SourcePath = "ClientApp";
+            app.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = "ClientApp";
 
-            //    if (env.IsDevelopment())
-            //    {
-            //        spa.UseReactDevelopmentServer(npmScript: "start");
-            //    }
-            //});
+                if (env.IsDevelopment())
+                {
+                    spa.UseReactDevelopmentServer(npmScript: "start");
+                }
+            });
 
         }
         private void SetupGlobalStateManager(IServiceCollection services)
