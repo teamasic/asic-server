@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { Form, Icon, Input, Button, Checkbox, Spin, Row, Col } from 'antd';
+import { Form, Icon, Input, Button, Spin, Row, Col, Typography } from 'antd';
 import { FormEvent } from 'react';
 import { FormComponentProps } from 'antd/lib/form';
 
@@ -12,10 +12,10 @@ import UserLogin from '../models/UserLogin';
 import { UserState } from '../store/user/userState';
 import { RouteComponentProps } from 'react-router';
 import * as firebase from '../firebase';
-import Text from 'antd/lib/typography/Text';
 import { getErrors, error } from '../utils';
 
 const redirectLocation = '/dashboard';
+const { Title } = Typography;
 // At runtime, Redux will merge together...
 type LoginProps =
   UserState // ... state we've requested from the Redux store
@@ -71,7 +71,7 @@ class NormalLoginForm extends React.Component<LoginProps, LoginComponentState> {
   render() {
     return (
       <div className="container">
-        <Row align="middle">
+        <Row align="middle" className="login">
           <div className="content">
             <Col>{(this.props.isLoading) ? <Spin /> : this.getForm()}</Col>
           </div>
@@ -84,6 +84,16 @@ class NormalLoginForm extends React.Component<LoginProps, LoginComponentState> {
     const { getFieldDecorator } = this.props.form;
     return (
       <Form onSubmit={this.handleSubmit} className="login-form">
+        <Title level={1}>Welcome</Title>
+        <div className="logo" >
+          <img
+            src="asiclogo.jpg"
+            style={{
+              backgroundSize: 'contain',
+              backgroundPosition: 'center',
+              borderRadius: '5px'
+            }} />
+        </div>
         <Form.Item>
           {getFieldDecorator('username', {
             rules: [{ required: true, message: 'Please input your username!' }],
@@ -105,13 +115,21 @@ class NormalLoginForm extends React.Component<LoginProps, LoginComponentState> {
             />,
           )}
         </Form.Item>
+        <Button
+          type="primary"
+          htmlType="submit"
+          className="login-form-button"
+          style={{ width: '100%' }}>
+          Log in
+        </Button>
         <Form.Item>
-          <Button type="primary" htmlType="submit" className="login-form-button">
-            Log in
-          </Button>
-        </Form.Item>
-        <Form.Item>
-          <Button type='primary' onClick={firebase.auth.doSignInWithGooogle}>Sign in with Google</Button>
+          <Button
+            type='primary'
+            style={{ width: '100%' }}
+            onClick={firebase.auth.doSignInWithGooogle}
+            icon="google">
+            Sign in with Google
+            </Button>
           {
             this.props.errors.length === 0 ? "" :
               this.renderErrors()
