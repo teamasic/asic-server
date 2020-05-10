@@ -13,4 +13,4 @@ ap.add_argument("-n", "--names", default="",
                 help="a comma separated list of identifiers of people to retrain")
 args = vars(ap.parse_args())
 
-my_service.generate_more_embeddings(args["dataset"], args["output"])
+my_service.add_embeddings(args["dataset"], args["output"], args["input"], args["names"])
