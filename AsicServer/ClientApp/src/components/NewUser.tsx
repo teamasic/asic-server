@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { Card, Upload, Button, Icon, Row, Col, Table, Form, Input, Tooltip, Spin } from 'antd'
+import { Card, Upload, Button, Icon, Row, Col, Table, Form, Input, Tooltip, Spin, Checkbox } from 'antd'
 import { renderStripedTable } from '../utils';
 import Text from 'antd/lib/typography/Text';
 import { parse } from 'papaparse';
@@ -9,7 +9,6 @@ import { userActionCreators } from '../store/user/userActionCreators';
 import { bindActionCreators } from 'redux';
 import { ApplicationState } from '../store';
 import { FormComponentProps } from 'antd/lib/form';
-import User from '../models/User';
 import { constants } from '../constants/constant';
 
 const { Dragger } = Upload;
@@ -58,9 +57,11 @@ interface ComponentState {
     multipleZipFile: File,
     singleZipFile: File,
     csvFile: File,
-    user: any, 
+    user: any,
     creatingMultipleUsers: boolean,
-    creatingSingleUser: boolean
+    creatingSingleUser: boolean,
+    appendTrainMultiple: boolean,
+    appendTrainSingle: boolean
 }
 
 type Props = typeof userActionCreators // ... plus action creators we've requested
@@ -85,7 +86,9 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
             csvFile: new File([], 'Null'),
             user: null,
             creatingMultipleUsers: false,
-            creatingSingleUser: false
+            creatingSingleUser: false,
+            appendTrainMultiple: false,
+            appendTrainSingle: false
         }
     }
 
@@ -108,8 +111,8 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
 
     private validateBeforeUpload = (file: File, fileType: string): boolean | Promise<void> => {
         // Check zip file format
-        if(fileType === FILE_TYPE.ZIP) {
-            if(file.type === FILE_TYPE.X_ZIP) {
+        if (fileType === FILE_TYPE.ZIP) {
+            if (file.type === FILE_TYPE.X_ZIP) {
                 fileType = file.type;
             }
         }
@@ -218,7 +221,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
 
     private createMultipleUsers = () => {
         if (this.validateData()) {
-            this.setState({creatingMultipleUsers: true});
+            this.setState({ creatingMultipleUsers: true });
             var users = this.state.importUsers;
             var importUsers = new Array(0);
             users.forEach((item: any) => {
@@ -233,7 +236,9 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
             });
             var csvFile = this.state.csvFile;
             var zipFile = this.state.multipleZipFile;
-            this.props.requestCreateMultipleUsers(zipFile, csvFile, this.resetUsersTable);
+            var appendTrainMultiple = this.state.appendTrainMultiple;
+            this.props.requestCreateMultipleUsers(zipFile, csvFile, 
+                this.resetUsersTable, appendTrainMultiple);
         }
     }
 
@@ -245,7 +250,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
         }
         this.props.form.validateFields((err: any, values: any) => {
             if (!err && isUpLoadZipFile) {
-                this.setState({creatingSingleUser: true});
+                this.setState({ creatingSingleUser: true });
                 var user = {
                     email: values.email,
                     code: values.code,
@@ -253,7 +258,10 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                     image: values.image
                 };
                 var zipFile = this.state.singleZipFile;
-                this.props.requestCreateSingleUser(zipFile, user, this.createSingleUserSuccess, this.createSingleUserWithError);
+                var appendTrainSingle = this.state.appendTrainSingle;
+                this.props.requestCreateSingleUser(zipFile, user, 
+                    this.createSingleUserSuccess, this.createSingleUserWithError,
+                    appendTrainSingle);
             }
         });
     }
@@ -273,7 +281,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
     }
 
     private createSingleUserWithError = () => {
-        this.setState({creatingSingleUser: false});
+        this.setState({ creatingSingleUser: false });
     }
 
     private validateData = () => {
@@ -320,10 +328,21 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
     }
 
     private resetUsersTable = (data: any) => {
-        this.setState({ 
+        this.setState({
             importUsers: data,
             creatingMultipleUsers: false
         });
+    }
+
+    private addToTrain = (e: any) => {
+        switch (this.state.tabKey) {
+            case TAB_KEY.MULTIPLE:
+                this.setState({ appendTrainMultiple: e.target.checked});
+                break;
+            case TAB_KEY.SINGLE:
+                this.setState({ appendTrainSingle: e.target.checked});
+                break;
+        }
     }
 
     render() {
@@ -481,6 +500,9 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                             <Col span={8}>
                                 <Button type="primary" style={{ width: '100%' }} onClick={this.createMultipleUsers}>Save</Button>
                             </Col>
+                            <Col span={7} offset={1}>
+                                <Checkbox onChange={this.addToTrain}>Add to train model</Checkbox>
+                            </Col>
                         </Row>
                     </Spin>
                 ) :
@@ -569,6 +591,9 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                             <Col span={8} offset={8}>
                                 <Button type="primary" style={{ width: '100%' }}
                                     onClick={this.createSingleUser}>Save</Button>
+                            </Col>
+                            <Col span={7} offset={1}>
+                                <Checkbox onChange={this.addToTrain}>Add to train model</Checkbox>
                             </Col>
                         </Row>
                     </Spin>
