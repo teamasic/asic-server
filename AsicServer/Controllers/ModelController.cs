@@ -41,10 +41,12 @@ namespace AsicServer.Controllers
         {
             return ExecuteInMonitoring(() =>
             {
+                /*
                 if (globalStateService.IsTraining())
                 {
                     throw new Exception("Already training model");
                 }
+                */
                 try
                 {
                     globalStateService.SetTraining(true);

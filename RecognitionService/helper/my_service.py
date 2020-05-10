@@ -108,9 +108,11 @@ def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
     if onlyTrainSomePeople:
         # only remove specified people's folders
         for name in name_image_dict.keys():
-            shutil.rmtree(os.path.sep.join([augmented_path, name]))
-            time.sleep(1)  # Delays for 1 second because shutil functions are async and may block os.mkdir
-            os.mkdir(os.path.sep.join([augmented_path, name]))
+        	path_to_delete = os.path.sep.join([augmented_path, name])
+        	if os.path.exists(path_to_delete):
+        		shutil.rmtree(path_to_delete)
+        		time.sleep(1)  # Delays for 1 second because shutil functions are async and may block os.mkdir
+        	os.mkdir(os.path.sep.join([augmented_path, name]))
     else:
         # remove the entire folder and build it new again    
         if os.path.exists(augmented_path):
