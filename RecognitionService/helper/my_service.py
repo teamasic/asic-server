@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import pickle
 import shutil
@@ -14,46 +15,47 @@ from config import my_constant
 from helper import my_face_detection, my_face_recognition, my_face_generator
 
 
-def generate_embeddings(datasetPath, outputDir):
-    imagePaths = list(paths.list_images(datasetPath))
-    knownEmbeddings = []
-    knownNames = []
-    totalAdded = 0
-    for (i, imagePath) in enumerate(imagePaths):
-        # extract the person name from the image path
-        print("[INFO] processing image {}/{}".format(i + 1,
-                                                     len(imagePaths)))
+def getVecAndName(imagePath):
+    print("[INFO] processing image {}".format(imagePath))
 
-        name = imagePath.split(cv2.os.path.sep)[-2]
+    name = imagePath.split(cv2.os.path.sep)[-2]
 
-        # load the image and convert to rbg image because dlib use rgb image
-        image = cv2.imread(imagePath)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = imutils.resize(image, width=400)
-        boxes = my_face_detection.face_locations(image)
-        if len(boxes) > 1:
-            print(imagePath, "> 1")
-            print(len(boxes))
-            continue
-        if len(boxes) == 0:
-            print(imagePath, "= 0")
-            print(len(boxes))
-            continue
+    # load the image
+    image = cv2.imread(imagePath)
+    image = imutils.resize(image, width=400)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    boxes = my_face_detection.face_locations(image)
+    if len(boxes) > 1:
+        print(imagePath, "> 1")
+        print(len(boxes))
+        return None, None
+    elif len(boxes) == 0:
+        print(imagePath, "= 0")
+        print(len(boxes))
+        return None, None
+    else:
         vecs = my_face_recognition.face_encodings(image, boxes)
         vec = vecs[0]
+        return vec, name
 
-        knownEmbeddings.append(vec.flatten())
-        knownNames.append(name)
-        totalAdded += 1
+
+def generate_embeddings(datasetPath, outputDir):
+    myPool = multiprocessing.Pool()
+    imagePaths = list(paths.list_images(datasetPath))
+
+    results = myPool.map(getVecAndName, imagePaths)
+    knownEmbeddings = [x[0] for x in results if x[0] is not None and x[1] is not None]
+    knownNames = [x[1] for x in results if x[0] is not None and x[1] is not None]
 
     # dump the facial embeddings + names to disk
-    print("[INFO] serializing total {} encodings...".format(totalAdded))
+    print("[INFO] serializing total {} encodings...".format(len(knownEmbeddings)))
     data = {"embeddings": knownEmbeddings, "names": knownNames}
     path = os.path.join(outputDir, my_constant.embeddingsPath)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     f = open(path, "wb+")
     f.write(pickle.dumps(data))
     f.close()
+    myPool.close()
 
 
 def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
@@ -128,6 +130,7 @@ def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
 
 
 def add_embeddings(datasetPath, outputDir, inputDir, nameString):
+    myPool = multiprocessing.Pool()
     namesToAdd = nameString.split(",")
 
     print("[INFO] loading face embeddings...")
@@ -137,7 +140,7 @@ def add_embeddings(datasetPath, outputDir, inputDir, nameString):
     imagePaths = list(paths.list_images(datasetPath))
     knownEmbeddings = data["embeddings"]
     knownNames = data["names"]
-    totalAdded = 0
+    # totalAdded = 0
 
     # remove all embeddings of attendees in the to-add list
     filteredKnownNames = []
@@ -149,46 +152,25 @@ def add_embeddings(datasetPath, outputDir, inputDir, nameString):
 
     filteredKnownEmbeddings = [emb for i, emb in enumerate(knownEmbeddings) if i in filteredKnownNamesIndex]
     # end remove
-    imageNeedToAddIndexs = []
+    imagePathsNeedToAdd = []
     for (i, imagePath) in enumerate(imagePaths):
         name = imagePath.split(cv2.os.path.sep)[-2]
         if name in namesToAdd:
-            imageNeedToAddIndexs.append(i)
-    for (i, index) in enumerate(imageNeedToAddIndexs):
-        imagePath = imagePaths[index]
-        name = imagePath.split(cv2.os.path.sep)[-2]
-        if name in namesToAdd:
-            # load the image
-            print("[INFO] processing image {}/{}".format(i + 1,
-                                                         len(imageNeedToAddIndexs)))
-            image = cv2.imread(imagePath)
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            image = imutils.resize(image, width=400)
-            boxes = my_face_detection.face_locations(image)
-            if len(boxes) > 1:
-                print(imagePath, "> 1")
-                print(len(boxes))
-                continue
-            if len(boxes) == 0:
-                print(imagePath, "= 0")
-                print(len(boxes))
-                continue
+            imagePathsNeedToAdd.append(imagePath)
+    results = myPool.map(getVecAndName, imagePathsNeedToAdd)
+    newKnownEmbeddings = [x[0] for x in results if x[0] is not None and x[1] is not None]
+    newKnownNames = [x[1] for x in results if x[0] is not None and x[1] is not None]
 
-            vecs = my_face_recognition.face_encodings(image, boxes)
-            vec = vecs[0]
+    filteredKnownEmbeddings = filteredKnownEmbeddings + newKnownEmbeddings
+    filteredKnownNames = filteredKnownNames + newKnownNames
 
-            filteredKnownEmbeddings.append(vec.flatten())
-            filteredKnownNames.append(name)
-            totalAdded += 1
-
-    # dump the facial embeddings + names to disk
-    print("[INFO] serializing total {} encodings...".format(totalAdded))
     data = {"embeddings": filteredKnownEmbeddings, "names": filteredKnownNames}
     path = os.path.join(outputDir, my_constant.embeddingsPath)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     f = open(path, "wb+")
     f.write(pickle.dumps(data))
     f.close()
+    myPool.close()
 
 
 def remove_embeddings(outputDir, embeddingsInputDir, nameString):
