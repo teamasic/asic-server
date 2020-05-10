@@ -40,7 +40,7 @@ namespace AsicServer.Controllers
         }
 
         [HttpPost("multiple")]
-        public dynamic CreateMultipleUsers(IFormFile zipFile, IFormFile users)
+        public dynamic CreateMultipleUsers(IFormFile zipFile, IFormFile users, [FromQuery] bool isAppendTrain)
         {
             return ExecuteInMonitoring(() =>
             {
@@ -50,7 +50,7 @@ namespace AsicServer.Controllers
         }
 
         [HttpPost("single")]
-        public dynamic CreateSingleUsers(IFormFile zipFile, [FromQuery] CreateUser user)
+        public dynamic CreateSingleUsers(IFormFile zipFile, [FromQuery] CreateUser user, [FromQuery] bool isAppendTrain)
         {
             return ExecuteInMonitoring(() =>
            {

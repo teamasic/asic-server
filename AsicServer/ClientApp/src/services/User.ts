@@ -12,15 +12,19 @@ export const login = async (userLogin: UserLogin): Promise<ApiResponse> => {
     return await response.data;
 };
 
-export const createMultipleUsers = async (zipFile: File, csvFile: File): Promise<ApiResponse> => {
+export const createMultipleUsers = async (zipFile: File, csvFile: File, isAppendTrain: boolean): Promise<ApiResponse> => {
     var formData = new FormData();
     formData.append("zipFile", zipFile);
     formData.append("users", csvFile);
-    const response = await axios.post(apify("multiple"), formData);
+    const response = await axios.post(apify("multiple"), formData, {
+        params: {
+            isAppendTrain: isAppendTrain
+        }
+    });
     return await response.data;
 }
 
-export const createSingleUser = async (zipFile: File, user: CreateUser): Promise<ApiResponse> => {
+export const createSingleUser = async (zipFile: File, user: CreateUser, isAppendTrain: boolean): Promise<ApiResponse> => {
     var formData = new FormData();
     formData.append("zipFile", zipFile);
     const response = await axios.post(apify("single"), formData, {
@@ -28,7 +32,8 @@ export const createSingleUser = async (zipFile: File, user: CreateUser): Promise
             Email: user.email,
             RollNumber: user.code,
             Fullname: user.fullname,
-            Image: user.image
+            Image: user.image,
+            isAppendTrain: isAppendTrain
         }
     });
     return await response.data;

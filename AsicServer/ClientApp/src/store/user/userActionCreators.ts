@@ -73,8 +73,9 @@ const requestLogin = (userLogin: UserLogin, redirect: Function): AppThunkAction 
     }
 }
 
-const requestCreateMultipleUsers = (zipFile: File, csvFile: File, resetUsersTable: Function): AppThunkAction => async (dispatch, getState) => {
-    const apiResponse: ApiResponse = await createMultipleUsers(zipFile, csvFile);
+const requestCreateMultipleUsers = (zipFile: File, csvFile: File, resetUsersTable: Function, isAppendTrain: boolean): AppThunkAction => async (dispatch, getState) => {
+    console.log(isAppendTrain);
+    const apiResponse: ApiResponse = await createMultipleUsers(zipFile, csvFile, isAppendTrain);
     if(apiResponse.success) {
         var result = apiResponse.data;
         console.log(result);
@@ -84,8 +85,9 @@ const requestCreateMultipleUsers = (zipFile: File, csvFile: File, resetUsersTabl
     }
 }
 
-const requestCreateSingleUser = (zipFile: File, user: CreateUser, createUserSuccess: Function, createUserWithError: Function): AppThunkAction => async (dispatch, getState) => {
-    var apiResponse: ApiResponse = await createSingleUser(zipFile, user);
+const requestCreateSingleUser = (zipFile: File, user: CreateUser, createUserSuccess: Function, createUserWithError: Function, isAppendTrain: boolean): AppThunkAction => async (dispatch, getState) => {
+    console.log(isAppendTrain);
+    var apiResponse: ApiResponse = await createSingleUser(zipFile, user, isAppendTrain);
     if(apiResponse.success) {
         var result = apiResponse.data;
         if(result) {
