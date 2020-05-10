@@ -1,7 +1,7 @@
 import moment from 'moment';
 import Swal from 'sweetalert2'
 import format from 'date-fns/format';
-
+import { detect, Browser } from 'detect-browser';
 
 export const renderStripedTable = (record: any, index: number) => {
     if (index % 2 === 0) {
@@ -44,3 +44,9 @@ export const getErrors = (errors: any[]) => {
 
 export const formatDateDDMMYYYYHHmm = (time: Date | string) =>
     format(new Date(time), 'dd-MM-yyyy hh:mm');
+
+
+export const isChromium = (): boolean => {
+    const browser = detect();
+    return browser != null && browser.name !== 'firefox';
+};
