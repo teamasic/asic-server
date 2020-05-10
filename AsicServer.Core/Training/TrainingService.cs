@@ -17,17 +17,30 @@ namespace AsicServer.Core.Training
         public ResponsePython AddEmbeddings(ICollection<string> names);
         public ResponsePython RemoveEmbeddings(ICollection<string> names);
         public TrainResultViewModel GetLastTrainingResult();
+        public bool HasExistingModel();
     }
     public class TrainingService: ITrainingService
     {
         private readonly ProcessStartInfoFactory processStartInfoFactory;
         private readonly MyConfiguration myConfiguration;
+        private readonly FilesConfiguration filesConfig;
 
         public TrainingService(ProcessStartInfoFactory processStartInfoFactory, 
-            MyConfiguration myConfiguration)
+            MyConfiguration myConfiguration, FilesConfiguration filesConfig)
         {
             this.processStartInfoFactory = processStartInfoFactory;
             this.myConfiguration = myConfiguration;
+            this.filesConfig = filesConfig;
+        }
+        public bool HasExistingModel()
+        {
+            var currentDirectory = Environment.CurrentDirectory;
+            var parentDirectory = Directory.GetParent(currentDirectory).FullName;
+            var fileDest = Path.Join(parentDirectory,
+                myConfiguration.RecognitionServiceName,
+                myConfiguration.ModelOutputFolderName,
+                filesConfig.RecognizerModelFile);
+            return File.Exists(fileDest);
         }
         public ResponsePython Train()
         {

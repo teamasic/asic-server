@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using AsicServer.Core.Training;
 using AsicServer.Core.ViewModels;
 using AsicServer.Infrastructure;
 using DataService.Service.UserService;
@@ -13,10 +15,14 @@ namespace AsicServer.Controllers
     public class UserController : BaseController
     {
         private readonly IUserService service;
+        private readonly ITrainingService trainingService;
 
-        public UserController(IUserService service, ExtensionSettings extensionSettings) : base(extensionSettings)
+        public UserController(IUserService service,
+            ITrainingService trainingService,
+            ExtensionSettings extensionSettings) : base(extensionSettings)
         {
             this.service = service;
+            this.trainingService = trainingService;
         }
 
         [HttpPost("login")]
@@ -40,21 +46,41 @@ namespace AsicServer.Controllers
         }
 
         [HttpPost("multiple")]
-        public dynamic CreateMultipleUsers(IFormFile zipFile, IFormFile users)
+        public dynamic CreateMultipleUsers(IFormFile zipFile, IFormFile users, [FromQuery] bool isAppendTrain)
         {
             return ExecuteInMonitoring(() =>
             {
-              var userWithoutImages = service.CreateMultipleUsers(users, zipFile);
-              return userWithoutImages;
+              var userWithImages = service.CreateMultipleUsers(users, zipFile);
+              if (isAppendTrain)
+                {
+                    var alreadyHasModel = trainingService.HasExistingModel();
+                    if (alreadyHasModel)
+                    {
+                        var codes = userWithImages.Select(u => u.Code).ToList();
+                        trainingService.AddEmbeddings(codes);
+                    } else
+                    {
+                        trainingService.Train();
+                    }
+                }
+              return userWithImages;
             });
         }
 
         [HttpPost("single")]
-        public dynamic CreateSingleUsers(IFormFile zipFile, [FromQuery] CreateUser user)
+        public dynamic CreateSingleUsers(IFormFile zipFile, [FromQuery] CreateUser user, [FromQuery] bool isAppendTrain)
         {
-            return ExecuteInMonitoring(() =>
+            return ExecuteInMonitoring(async () =>
            {
-               var result = service.CreateSingleUser(zipFile, user).Result;
+               var result = await service.CreateSingleUser(zipFile, user);
+               if (isAppendTrain)
+               {
+                   var alreadyHasModel = trainingService.HasExistingModel();
+                   trainingService.AddEmbeddings(new string[] { user.Code });
+               } else
+               {
+                   trainingService.Train();
+               }
                return result;
            });
         }
