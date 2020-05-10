@@ -27,6 +27,7 @@ using DataService.Service.RecordService;
 using AsicServer.Core.GlobalState;
 using AttendanceSystemIPCamera.Services.RecordService;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using Microsoft.AspNetCore.Http.Connections;
 
 namespace AsicServer
 {
@@ -164,6 +165,7 @@ namespace AsicServer
             services.AddScoped<IRecordService, RecordService>();
             services.AddScoped<IRecordStagingRepository, RecordStagingRepository>();
             services.AddScoped<IGlobalStateService, GlobalStateService>();
+            services.AddScoped<IRealTimeService, RealTimeService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -200,6 +202,12 @@ namespace AsicServer
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller}/{action=Index}/{id?}");
+                endpoints.MapHub<RealTimeService>("/hub", options =>
+                {
+                    options.Transports =
+                        HttpTransportType.WebSockets |
+                        HttpTransportType.LongPolling;
+                });
             });
 
             loggerFactory.AddFile("Logs/server-log-{Date}.txt");
