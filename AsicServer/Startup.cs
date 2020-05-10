@@ -28,6 +28,7 @@ using AsicServer.Core.GlobalState;
 using AttendanceSystemIPCamera.Services.RecordService;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.AspNetCore.Http.Connections;
+using System;
 
 namespace AsicServer
 {
@@ -151,6 +152,10 @@ namespace AsicServer
         private void SetupDI(IServiceCollection services)
         {
             services.AddHttpContextAccessor();
+            services.AddSignalR(hubOptions =>
+            {
+                hubOptions.HandshakeTimeout = TimeSpan.FromSeconds(15);
+            });
 
             services.AddSingleton(Configuration);
             services.AddScoped<ExtensionSettings>();
