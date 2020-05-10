@@ -4,7 +4,6 @@ import shutil
 import time
 import cv2
 import imutils
-import numpy as np
 import json
 from imutils import paths
 from sklearn import svm, linear_model
@@ -12,89 +11,10 @@ from sklearn.preprocessing import LabelEncoder
 from datetime import datetime
 
 from config import my_constant
-from helper import my_face_detection, my_face_recognition, my_face_generator, recognition_api
+from helper import my_face_detection, my_face_recognition, my_face_generator
 
 
-def recognize_image(imagePath, threshold=0):
-    image = cv2.imread(imagePath)
-    return recognize_image_after_read(image, threshold)
-
-
-def recognize_image_after_read(image, threshold=0, alignFace=False):
-    boxes = my_face_detection.face_locations(image)
-    if len(boxes) == 1:
-        if (alignFace == True):
-            aligned_image = my_face_detection.align_face(image, boxes[0])
-            vecs = my_face_recognition.face_encodings(aligned_image)
-        else:
-            vecs = my_face_recognition.face_encodings(image, boxes)
-        vec = vecs[0]
-        name, proba = _get_label(vec, threshold)
-        return boxes[0], name, proba
-    return None
-
-
-def _get_label(vec, threshold=0):
-    recognizer_model = pickle.loads(open(my_constant.recognizerModelPath, "rb").read())
-    recognizer = recognizer_model["recognizer"]
-    le = recognizer_model["le"]
-
-    preds = recognizer.predict_proba([vec])[0]
-    j = np.argmax(preds)
-    proba = preds[j]
-    name = le.classes_[j]
-    if (proba > threshold):
-        return name, proba
-    return "Unknown", None
-
-
-def generate_more_embeddings(datasetPath, outputDir, alignFace=False):
-    imagePaths = list(paths.list_images(datasetPath))
-    embeddingsPath = os.path.join(outputDir, my_constant.embeddingsPath)
-    data = pickle.loads(open(embeddingsPath, "rb").read())
-    knownEmbeddings = data["embeddings"]
-    knownNames = data["names"]
-    totalAdded = 0
-    for (i, imagePath) in enumerate(imagePaths):
-        # extract the person name from the image path
-        print("[INFO] processing image {}/{}".format(i + 1,
-                                                     len(imagePaths)))
-
-        name = imagePath.split(cv2.os.path.sep)[-2]
-
-        # load the image
-        image = cv2.imread(imagePath)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        boxes = my_face_detection.face_locations(image)
-        if len(boxes) > 1:
-            print(imagePath, "> 1")
-            print(len(boxes))
-            continue
-        if len(boxes) == 0:
-            print(imagePath, "= 0")
-            print(len(boxes))
-            continue
-        if (alignFace == True):
-            aligned_image = my_face_detection.align_face(image, boxes[0])
-            vecs = my_face_recognition.face_encodings(aligned_image)
-        else:
-            vecs = my_face_recognition.face_encodings(image, boxes)
-        vec = vecs[0]
-        knownEmbeddings.append(vec.flatten())
-        knownNames.append(name)
-        totalAdded += 1
-
-    # dump the facial embeddings + names to disk
-    print("[INFO] serializing more {} encodings...".format(totalAdded))
-    print("[INFO] serializing total {} encodings...".format(len(knownEmbeddings)))
-    data = {"embeddings": knownEmbeddings, "names": knownNames}
-    # path = os.path.join(outputDir, my_constant.embeddingsPath)
-    f = open(embeddingsPath, "wb+")
-    f.write(pickle.dumps(data))
-    f.close()
-
-
-def generate_embeddings(datasetPath, outputDir, alignFace=False):
+def generate_embeddings(datasetPath, outputDir):
     imagePaths = list(paths.list_images(datasetPath))
     knownEmbeddings = []
     knownNames = []
@@ -109,6 +29,7 @@ def generate_embeddings(datasetPath, outputDir, alignFace=False):
         # load the image and convert to rbg image because dlib use rgb image
         image = cv2.imread(imagePath)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = imutils.resize(image, width=400)
         boxes = my_face_detection.face_locations(image)
         if len(boxes) > 1:
             print(imagePath, "> 1")
@@ -118,11 +39,7 @@ def generate_embeddings(datasetPath, outputDir, alignFace=False):
             print(imagePath, "= 0")
             print(len(boxes))
             continue
-        if alignFace == True:
-            aligned_image = my_face_detection.align_face(image, boxes[0])
-            vecs = my_face_recognition.face_encodings(aligned_image)
-        else:
-            vecs = my_face_recognition.face_encodings(image, boxes)
+        vecs = my_face_recognition.face_encodings(image, boxes)
         vec = vecs[0]
 
         knownEmbeddings.append(vec.flatten())
@@ -137,39 +54,6 @@ def generate_embeddings(datasetPath, outputDir, alignFace=False):
     f = open(path, "wb+")
     f.write(pickle.dumps(data))
     f.close()
-
-
-def generate_train_model(outputDir):
-    print("[INFO] loading face embeddings...")
-    embeddingsPath = os.path.join(outputDir, my_constant.embeddingsPath)
-    data = pickle.loads(open(embeddingsPath, "rb").read())
-
-    # encode the labels
-    print("[INFO] encoding labels...")
-    le = LabelEncoder()
-    labels = le.fit_transform(data["names"])
-
-    # train the model used to accept the 128-d embeddings of the face and
-    # then produce the actual face recognition
-    print("[INFO] training model...")
-    recognizer = svm.SVC(C=1.0, kernel="linear", probability=True)
-    recognizer.fit(data["embeddings"], labels)
-
-    # write the actual face recognition model to disk
-
-    recognizer_model = {"recognizer": recognizer, "le": le}
-    path = os.path.join(outputDir, my_constant.recognizerModelPath)
-    f = open(path, "wb+")
-    f.write(pickle.dumps(recognizer_model))
-    f.close()
-
-    attendee_count = len(set(data["names"]))
-    image_count = len(data["embeddings"])
-    result_dict = {"attendeeCount": attendee_count, "imageCount": image_count,
-                   "timeFinished": datetime.now().isoformat()}
-    f_result = open(my_constant.resultFile, "w+")
-    f_result.write(json.dumps(result_dict))
-    f_result.close()
 
 
 def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
@@ -243,11 +127,11 @@ def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
             cv2.imwrite(full_file_name, image)
 
 
-def add_embeddings(datasetPath, outputDir, embeddingsInputDir, nameString, alignFace=False):
+def add_embeddings(datasetPath, outputDir, inputDir, nameString):
     namesToAdd = nameString.split(",")
 
     print("[INFO] loading face embeddings...")
-    embeddingsPath = os.path.join(embeddingsInputDir, my_constant.embeddingsPath)
+    embeddingsPath = os.path.join(inputDir, my_constant.embeddingsPath)
     data = pickle.loads(open(embeddingsPath, "rb").read())
 
     imagePaths = list(paths.list_images(datasetPath))
@@ -265,16 +149,21 @@ def add_embeddings(datasetPath, outputDir, embeddingsInputDir, nameString, align
 
     filteredKnownEmbeddings = [emb for i, emb in enumerate(knownEmbeddings) if i in filteredKnownNamesIndex]
     # end remove
-
+    imageNeedToAddIndexs = []
     for (i, imagePath) in enumerate(imagePaths):
-        # extract the person name from the image path
-        print("[INFO] processing image {}/{}".format(i + 1,
-                                                     len(imagePaths)))
         name = imagePath.split(cv2.os.path.sep)[-2]
-
+        if name in namesToAdd:
+            imageNeedToAddIndexs.append(i)
+    for (i, index) in enumerate(imageNeedToAddIndexs):
+        imagePath = imagePaths[index]
+        name = imagePath.split(cv2.os.path.sep)[-2]
         if name in namesToAdd:
             # load the image
+            print("[INFO] processing image {}/{}".format(i + 1,
+                                                         len(imageNeedToAddIndexs)))
             image = cv2.imread(imagePath)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image = imutils.resize(image, width=400)
             boxes = my_face_detection.face_locations(image)
             if len(boxes) > 1:
                 print(imagePath, "> 1")
@@ -284,11 +173,8 @@ def add_embeddings(datasetPath, outputDir, embeddingsInputDir, nameString, align
                 print(imagePath, "= 0")
                 print(len(boxes))
                 continue
-            if (alignFace == True):
-                aligned_image = my_face_detection.align_face(image, boxes[0])
-                vecs = my_face_recognition.face_encodings(aligned_image)
-            else:
-                vecs = my_face_recognition.face_encodings(image, boxes)
+
+            vecs = my_face_recognition.face_encodings(image, boxes)
             vec = vecs[0]
 
             filteredKnownEmbeddings.append(vec.flatten())
@@ -305,14 +191,13 @@ def add_embeddings(datasetPath, outputDir, embeddingsInputDir, nameString, align
     f.close()
 
 
-def remove_embeddings(datasetPath, outputDir, embeddingsInputDir, nameString, alignFace=False):
-    namesToAdd = nameString.split(",")
+def remove_embeddings(outputDir, embeddingsInputDir, nameString):
+    namesToRemove = nameString.split(",")
 
     print("[INFO] loading face embeddings...")
     embeddingsPath = os.path.join(embeddingsInputDir, my_constant.embeddingsPath)
     data = pickle.loads(open(embeddingsPath, "rb").read())
 
-    imagePaths = list(paths.list_images(datasetPath))
     knownEmbeddings = data["embeddings"]
     knownNames = data["names"]
 
@@ -320,7 +205,7 @@ def remove_embeddings(datasetPath, outputDir, embeddingsInputDir, nameString, al
     filteredKnownNames = []
     filteredKnownNamesIndex = []
     for i, name in enumerate(knownNames):
-        if not name in namesToAdd:
+        if not name in namesToRemove:
             filteredKnownNames.append(name)
             filteredKnownNamesIndex.append(i)
 
@@ -328,7 +213,7 @@ def remove_embeddings(datasetPath, outputDir, embeddingsInputDir, nameString, al
     # end remove
 
     # remove all folders of attendees to remove
-    for name in namesToAdd:
+    for name in namesToRemove:
         datasetPath = os.path.join("dataset", name)
         augmentedPath = os.path.join("augmented", name)
         if os.path.exists(datasetPath):
@@ -337,7 +222,7 @@ def remove_embeddings(datasetPath, outputDir, embeddingsInputDir, nameString, al
             shutil.rmtree(augmentedPath)
 
     # dump the facial embeddings + names to disk
-    print("[INFO] removing total {} encodings...".format(len(namesToAdd)))
+    print("[INFO] removing total {} encodings...".format(len(namesToRemove)))
     data = {"embeddings": filteredKnownEmbeddings, "names": filteredKnownNames}
     path = os.path.join(outputDir, my_constant.embeddingsPath)
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -360,7 +245,7 @@ def generate_train_model_softmax(outputDir):
     # then produce the actual face recognition
     print("[INFO] training model...")
     recognizer = linear_model.LogisticRegression(C=1e5,
-                                             solver='lbfgs', multi_class='multinomial')
+                                                 solver='lbfgs', multi_class='multinomial', max_iter=1000)
     recognizer.fit(data["embeddings"], labels)
 
     # write the actual face recognition model to disk
