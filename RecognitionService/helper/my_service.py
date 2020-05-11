@@ -73,23 +73,26 @@ def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
     name_batch = []
     count = genImageNum  # generate 4 fake images for 1 raw image
 
-    # loop over the image paths
+    imagePathsNeedToTrain = []
+
+    # add image need
     for (i, imagePath) in enumerate(imagePaths):
-        # extract the person name from the image path
-        print("[INFO] processing image {}/{}".format(i + 1,
-                                                     len(imagePaths)))
-
         name = imagePath.split(os.path.sep)[-2]
-
         if (not onlyTrainSomePeople) or (onlyTrainSomePeople and name in peopleToAugment):
-            # load the image, resize it to have a width of 400 pixels (while
-            # maintaining the aspect ratio)
-            image = cv2.imread(imagePath)
-            if name == "unknown":
-                unknown_batch.append(image)
-            else:
-                original_batch.append(image)
-                name_batch.append(name)
+            imagePathsNeedToTrain.append(imagePath)
+
+    print(len(imagePathsNeedToTrain))
+
+    # loop over the image paths
+    for (i, imagePath) in enumerate(imagePathsNeedToTrain):
+        print("Process images {}/{}".format(i, len(imagePathsNeedToTrain)) )
+        name = imagePath.split(os.path.sep)[-2]
+        image = cv2.imread(imagePath)
+        if name == "unknown":
+            unknown_batch.append(image)
+        else:
+            original_batch.append(image)
+            name_batch.append(name)
 
     augmented_batch = my_face_generator.face_generate(original_batch, count)
     name_batch = name_batch * count
@@ -97,7 +100,6 @@ def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
     # add all augmented images into a dictionary
     name_image_dict = dict()
     for name, image in zip(name_batch, augmented_batch):
-
         if name in name_image_dict:
             name_image_dict[name].append(image)
         else:
@@ -108,11 +110,11 @@ def augment_images(datasetDir, augmentedDir, nameString, genImageNum=4):
     if onlyTrainSomePeople:
         # only remove specified people's folders
         for name in name_image_dict.keys():
-        	path_to_delete = os.path.sep.join([augmented_path, name])
-        	if os.path.exists(path_to_delete):
-        		shutil.rmtree(path_to_delete)
-        		time.sleep(1)  # Delays for 1 second because shutil functions are async and may block os.mkdir
-        	os.mkdir(os.path.sep.join([augmented_path, name]))
+            path_to_delete = os.path.sep.join([augmented_path, name])
+            if os.path.exists(path_to_delete):
+                shutil.rmtree(path_to_delete)
+                time.sleep(1)  # Delays for 1 second because shutil functions are async and may block os.mkdir
+            os.mkdir(os.path.sep.join([augmented_path, name]))
     else:
         # remove the entire folder and build it new again    
         if os.path.exists(augmented_path):
