@@ -16,7 +16,8 @@ const unloadedState: UserState = {
     isLogin: false,
     roles: [],
     accessToken: "",
-    errors: []
+    errors: [],
+    usersToTrainMore: []
 };
 
 const reducers: Reducer<UserState> = (state: UserState | undefined, incomingAction: AnyAction): UserState => {
@@ -63,6 +64,11 @@ const reducers: Reducer<UserState> = (state: UserState | undefined, incomingActi
                 ...unloadedState,
                 successfullyLoaded: true
             }
+        case ACTIONS.RECEIVE_USERS_TO_TRAIN_MORE:
+            return {
+                ...state,
+                usersToTrainMore: action.users
+            };
     }
 
     return state;

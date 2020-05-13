@@ -29,6 +29,8 @@ namespace DataService.Service.UserService
         Task<bool> CreateSingleUser(IFormFile zipFile, CreateUser user);
         UserViewModel GetByEmail(string email);
         List<UserViewModel> GetByCodes(string codes);
+        public void NotifyToTrainMore(string code);
+        public List<UserViewModel> GetUsersFromTrainMoreList();
     }
 
     public class UserService : BaseService<User>, IUserService
@@ -36,15 +38,18 @@ namespace DataService.Service.UserService
         private readonly JwtTokenProvider jwtTokenProvider;
         private readonly IUserRepository repository;
         private readonly MyConfiguration configuration;
+        private readonly FilesConfiguration filesConfiguration;
 
         public UserService(IUserRepository repository,
                             UnitOfWork unitOfWork,
                             JwtTokenProvider jwtTokenProvider,
-                            MyConfiguration configuration) : base(unitOfWork)
+                            MyConfiguration configuration,
+                            FilesConfiguration filesConfiguration) : base(unitOfWork)
         {
             this.jwtTokenProvider = jwtTokenProvider;
             this.repository = repository;
             this.configuration = configuration;
+            this.filesConfiguration = filesConfiguration;
         }
 
         public async Task<AccessTokenResponse> Authenticate(UserAuthentication userAuthen)
@@ -318,7 +323,7 @@ namespace DataService.Service.UserService
         {
             var listCodes = codes.Split(',').ToList();
             var viewModels = new List<UserViewModel>();
-            if(listCodes.Count > 0)
+            if (listCodes.Count > 0)
             {
                 var users = repository.GetByCodes(listCodes);
                 foreach (var user in users)
@@ -327,6 +332,56 @@ namespace DataService.Service.UserService
                 }
             }
             return viewModels;
+        }
+        public List<UserViewModel> GetByCodes(ICollection<string> listCodes)
+        {
+            var viewModels = new List<UserViewModel>();
+            if (listCodes.Count > 0)
+            {
+                var users = repository.GetByCodes(listCodes);
+                foreach (var user in users)
+                {
+                    viewModels.Add(AutoMapper.Mapper.Map<UserViewModel>(user));
+                }
+            }
+            return viewModels;
+        }
+
+        public void NotifyToTrainMore(string code)
+        {
+            var currentDirectory = Environment.CurrentDirectory;
+            var file = Path.Join(currentDirectory, filesConfiguration.TrainMoreNotificationFile);
+            if (File.Exists(file))
+            {
+                var lines = File.ReadAllLines(file);
+                var codes = new HashSet<string>(lines);
+                if (!codes.Contains(code))
+                {
+                    using StreamWriter sw = File.AppendText(file);
+                    sw.WriteLine(code);
+                }
+            }
+            else
+            {
+                // Create a file to write to.
+                using StreamWriter sw = File.CreateText(file);
+                sw.WriteLine(code);
+            }
+        }
+
+        public List<UserViewModel> GetUsersFromTrainMoreList()
+        {
+            var currentDirectory = Environment.CurrentDirectory;
+            var file = Path.Join(currentDirectory, filesConfiguration.TrainMoreNotificationFile);
+            if (File.Exists(file))
+            {
+                var lines = File.ReadAllLines(file);
+                var codes = new HashSet<string>(lines);
+                return GetByCodes(codes);
+            } else
+            {
+                return new List<UserViewModel>();
+            }
         }
     }
 }

@@ -5,17 +5,18 @@ import { AnyAction } from "redux";
 import UserLogin from "../../models/UserLogin";
 import { constants } from "../../constants/constant";
 import { UserLoginResponse } from "../../models/UserLoginResponse";
-import { login, createMultipleUsers, createSingleUser, getUserByEmail } from "../../services/User";
+import { login, createMultipleUsers, createSingleUser, getUserByEmail, getUsersFromTrainMoreList } from "../../services/User";
 import { error, success, warning } from "../../utils";
 import CreateUser from "../../models/CreateUser";
+import User from "../../models/User";
 
 export const ACTIONS = {
     START_REQUEST_LOGIN:"START_REQUEST_LOGIN",
     STOP_REQUEST_LOGIN_WITH_ERRORS:"STOP_REQUEST_LOGIN_WITH_ERRORS",
     RECEIVE_SUCCESS_LOGIN:"RECEIVE_SUCCESS_LOGIN",
     USER_INFO_NOT_IN_LOCAL: "USER_INFO_NOT_IN_LOCAL",
-    LOG_OUT: "LOG_OUT"
-
+    LOG_OUT: "LOG_OUT",
+    RECEIVE_USERS_TO_TRAIN_MORE: 'RECEIVE_USERS_TO_TRAIN_MORE'
 }
 
 function startRequestLogin() {
@@ -112,6 +113,22 @@ const requestUserByEmail = (email: string, getSuccess: Function): AppThunkAction
     }
 }
 
+function receiveListUsersToTrainMore(users: User[]) {
+    return {
+        type: ACTIONS.RECEIVE_USERS_TO_TRAIN_MORE,
+        users
+    };
+}
+
+const getListUsersToTrainMore = (): AppThunkAction => async (dispatch, getState) => {
+    var apiResponse: ApiResponse = await getUsersFromTrainMoreList();
+    if (apiResponse.success) {
+        dispatch(receiveListUsersToTrainMore(apiResponse.data))
+    } else {
+        console.log(apiResponse.errors);
+    }
+};
+
 export const userActionCreators = {
     requestLogin: requestLogin,
     requestCreateMultipleUsers: requestCreateMultipleUsers,
@@ -119,4 +136,5 @@ export const userActionCreators = {
     requestUserByEmail: requestUserByEmail,
     checkUserInfo: checkUserInfo,
     logout: logout,
+    getListUsersToTrainMore
 };

@@ -76,10 +76,13 @@ namespace AsicServer.Controllers
                if (isAppendTrain)
                {
                    var alreadyHasModel = trainingService.HasExistingModel();
-                   trainingService.AddEmbeddings(new string[] { user.Code });
-               } else
-               {
-                   trainingService.Train();
+                   if (alreadyHasModel)
+                   {
+                       trainingService.AddEmbeddings(new string[] { user.Code });
+                   } else
+                   {
+                       trainingService.Train();
+                   }
                }
                return result;
            });
@@ -103,5 +106,26 @@ namespace AsicServer.Controllers
             });
         }
 
+        [HttpPost("train")]
+        public dynamic TrainMore([FromQuery] string code)
+        {
+            return ExecuteInMonitoring(() =>
+            {
+                service.NotifyToTrainMore(code);
+                return new AttendeeViewModel
+                {
+                    Code = code
+                };
+            });
+        }
+
+        [HttpGet("train")]
+        public BaseResponse<List<UserViewModel>> GetUsersFromTrainMoreList()
+        {
+            return ExecuteInMonitoring(() =>
+            {
+                return service.GetUsersFromTrainMoreList();
+            });
+        }
     }
 }

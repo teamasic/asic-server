@@ -10,23 +10,30 @@ import { bindActionCreators } from 'redux';
 import { ApplicationState } from '../store';
 import { FormComponentProps } from 'antd/lib/form';
 import { constants } from '../constants/constant';
+import { UserState } from '../store/user/userState';
+import User from '../models/User';
 
 const { Dragger } = Upload;
 
 const tabList = [
     {
         key: 'multiple',
-        tab: 'Multiple users',
+        tab: 'Create multiple users',
     },
     {
         key: 'single',
-        tab: 'Single user',
+        tab: 'Create a single user',
     },
+    {
+        key: 'need_train_more',
+        tab: 'Users to train more',
+    }
 ];
 
 const TAB_KEY = {
     MULTIPLE: 'multiple',
-    SINGLE: 'single'
+    SINGLE: 'single',
+    NEED_TRAIN_MORE: 'need_train_more'
 };
 
 const ERR_MESSAGE = {
@@ -64,7 +71,7 @@ interface ComponentState {
     appendTrainSingle: boolean
 }
 
-type Props = typeof userActionCreators // ... plus action creators we've requested
+type Props = UserState & typeof userActionCreators // ... plus action creators we've requested
     & FormComponentProps;
 
 class NewUser extends React.PureComponent<Props, ComponentState> {
@@ -90,6 +97,10 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
             appendTrainMultiple: false,
             appendTrainSingle: false
         }
+    }
+
+    componentDidMount() {
+        this.props.getListUsersToTrainMore();
     }
 
     private onTabChange = (key: string) => {
@@ -350,7 +361,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
             <div>
                 <Card
                     style={{ width: '100%' }}
-                    title='Create user'
+                    title='Manage users'
                     tabList={tabList}
                     activeTabKey={this.state.tabKey}
                     onTabChange={key => {
@@ -362,6 +373,27 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
             </div>
         );
     }
+
+    private renderUsersToTrainMoreTable = () => {
+        const columns = [
+            {
+                title: 'Code',
+                dataIndex: 'code',
+                key: 'code'
+            },
+            {
+                title: 'Name',
+                dataIndex: 'name',
+                key: 'name'
+            },
+            {
+                title: 'Email',
+                dataIndex: 'email',
+                key: 'email'
+            }
+        ];
+        return <Table columns={columns} dataSource={this.props.usersToTrainMore} rowKey={a => a.code} />;
+    };
 
     private renderContent = () => {
         const columns = [
@@ -418,6 +450,9 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
             }
         ];
         const { getFieldDecorator } = this.props.form;
+        if (this.state.tabKey === TAB_KEY.NEED_TRAIN_MORE) {
+            return this.renderUsersToTrainMoreTable();
+        }
         return (
             this.state.tabKey === TAB_KEY.MULTIPLE ?
                 (
@@ -534,8 +569,8 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                     <Form.Item label="Fullname" required>
                                         {getFieldDecorator('fullname', {
                                             rules: [
-                                                { required: true, message: 'Please input fullname' },
-                                                { min: 3, max: 50, message: 'Fullname requires 3-50 characters' }
+                                                { required: true, message: 'Please input full name' },
+                                                { min: 3, max: 50, message: 'Full name requires 3-50 characters' }
                                             ],
                                         })(
                                             <Input type="text" disabled={this.state.user != null} />
@@ -545,7 +580,7 @@ class NewUser extends React.PureComponent<Props, ComponentState> {
                                         {getFieldDecorator('image', {
                                             rules: [
                                                 { required: true, message: 'Please input image' },
-                                                { min: 3, max: 100, message: 'Fullname requires 3-100 characters' }
+                                                { min: 3, max: 300, message: 'Image requires 3-300 characters' }
                                             ],
                                         })(
                                             <Input type="text" disabled={this.state.user != null} />

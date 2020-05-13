@@ -30,7 +30,7 @@ export const createSingleUser = async (zipFile: File, user: CreateUser, isAppend
     const response = await axios.post(apify("single"), formData, {
         params: {
             Email: user.email,
-            RollNumber: user.code,
+            Code: user.code,
             Fullname: user.fullname,
             Image: user.image,
             isAppendTrain: isAppendTrain
@@ -47,3 +47,8 @@ export const getUserByEmail = async (email: string): Promise<ApiResponse> => {
     });
     return await response.data;
 }
+
+export const getUsersFromTrainMoreList = async (): Promise<ApiResponse> => {
+    var response = await axios.get(apify('train'));
+    return await response.data;
+};

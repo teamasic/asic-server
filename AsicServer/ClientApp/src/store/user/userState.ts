@@ -7,5 +7,6 @@ export interface UserState {
     roles: string[],
     accessToken: string,
     isLogin: boolean;
-    errors: any[]
+    errors: any[],
+    usersToTrainMore: User[]
 }
